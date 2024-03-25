@@ -25,7 +25,10 @@ else()
 		"src/shader.cpp"
 		"src/window.cpp"
 		"src/imguizmo.cpp"
-		"src/ImGuizmo/ImGuizmo.cpp" "src/vertexbuffer.cpp" "include/framework/vertexbuffer.h" "include/framework/vertexarray.h" "src/vertexarray.cpp")
+		"src/ImGuizmo/ImGuizmo.cpp" 
+		"src/vertexbuffer.cpp" 
+		"src/vertexarray.cpp"
+		"src/texture.cpp")
 	target_include_directories(CGFramework PRIVATE "include/framework/" PUBLIC "include/")
 	target_link_libraries(CGFramework PUBLIC OpenGL::GL glad glm glfw imgui stb tinyobjloader fmt nativefiledialog toml)
 	target_compile_features(CGFramework PUBLIC cxx_std_20)

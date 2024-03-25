@@ -18,6 +18,7 @@ DISABLE_WARNINGS_POP()
 #include <framework/window.h>
 #include <framework/vertexbuffer.h>
 #include <framework/vertexarray.h>
+#include <framework/texture.h>
 #include <iostream>
 #include <span>
 #include <vector>
@@ -26,6 +27,8 @@ DISABLE_WARNINGS_POP()
 // Configuration
 constexpr int WIDTH = 800;
 constexpr int HEIGHT = 600;
+
+Texture* texturePaper = NULL;
 
 bool cursorCircle = true;
 bool paperPlane = true;
@@ -54,31 +57,6 @@ unsigned int indicesPlane[] = {
     0, 1, 2,  // first triangle
     2, 3, 0   // second triangle
 };
-
-std::vector<float> buildCircle(const glm::vec2 center, float radius, int thickness, int vCount, float aspectRatio)
-{
-    std::vector<float> verticesCircle;
-
-    float angleIncrement = 2.0f * glm::pi<float>() / vCount;
-    for (int t = 0; t < thickness; t++)
-    {
-        //    // Calculate the effective radius for the current layer
-        float layerRadius = radius - (t / (WIDTH / 2.0f) ); // -(t / 100);  
-
-        // positions
-        for (int i = 0; i <= vCount; i++)
-        {
-            float currentAngle = angleIncrement * i;
-            float x = layerRadius * cos(currentAngle) + center.x;
-            float y = (layerRadius * sin(currentAngle) + center.y) * aspectRatio;
-            verticesCircle.push_back(x);
-            verticesCircle.push_back(y);  
-            verticesCircle.push_back(0.0f); 
-        }
-    }
-    return verticesCircle;
-}
-
 
 int main()
 {
@@ -125,24 +103,28 @@ int main()
     vaoPlane.AddBuffer(vboPlane, 1, 2, GL_FLOAT, 5 * sizeof(float), (void*)(3 * sizeof(float))); // add texture attribute  
     vaoPlane.Unbind(); 
     // Create a texture on the GPU with 3 channels with 8 bits each.
-    GLuint texPaper;
-    glGenTextures(1, &texPaper);
-    glBindTexture(GL_TEXTURE_2D, texPaper);   
-    // Set behavior for when texture coordinates are outside the [0, 1] range.
-    glTextureParameteri(texPaper, GL_TEXTURE_WRAP_S, GL_REPEAT); 
-    glTextureParameteri(texPaper, GL_TEXTURE_WRAP_T, GL_REPEAT); 
-    // Set interpolation for texture sampling (GL_NEAREST for no interpolation).
-    glTextureParameteri(texPaper, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
-    glTextureParameteri(texPaper, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
-    //// Plane TEXTURES
-    int widthPaper, heightPaper, sourceNumChannels; // Number of channels in source image. pixels will always be the requested number of channels (3). 
-    stbi_uc* paperTexture = stbi_load("resources/Watercolor_paper_texture.jpeg", &widthPaper, &heightPaper, &sourceNumChannels, STBI_rgb);
-    if (paperTexture) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, widthPaper, heightPaper, 0, GL_RGB, GL_UNSIGNED_BYTE, paperTexture);
+    texturePaper = new Texture(GL_TEXTURE_2D, "resources/Watercolor_paper_texture.jpeg");
+    if (!texturePaper->Load()) {
+        return 1;
     }
-    else {
-        std::cout << "Failed to load texture" << std::endl;
-    }
+    //GLuint texPaper;
+    //glGenTextures(1, &texPaper);
+    //glBindTexture(GL_TEXTURE_2D, texPaper);   
+    //// Set behavior for when texture coordinates are outside the [0, 1] range.
+    //glTextureParameteri(texPaper, GL_TEXTURE_WRAP_S, GL_REPEAT); 
+    //glTextureParameteri(texPaper, GL_TEXTURE_WRAP_T, GL_REPEAT); 
+    //// Set interpolation for texture sampling (GL_NEAREST for no interpolation).
+    //glTextureParameteri(texPaper, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+    //glTextureParameteri(texPaper, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
+    ////// Plane TEXTURES
+    //int widthPaper, heightPaper, sourceNumChannels; // Number of channels in source image. pixels will always be the requested number of channels (3). 
+    //stbi_uc* paperTexture = stbi_load("resources/Watercolor_paper_texture.jpeg", &widthPaper, &heightPaper, &sourceNumChannels, STBI_rgb);
+    //if (paperTexture) {
+    //    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, widthPaper, heightPaper, 0, GL_RGB, GL_UNSIGNED_BYTE, paperTexture);
+    //}
+    //else {
+    //    std::cout << "Failed to load texture" << std::endl;
+    //}
     
     // Enable depth testing.
     glEnable(GL_DEPTH_TEST);  
@@ -180,8 +162,9 @@ int main()
             vaoPlane.Bind(); 
             glm::vec3 colorPlane(1.0, 1.0, 1.0); 
             {
-                glActiveTexture(GL_TEXTURE0); 
-                glBindTexture(GL_TEXTURE_2D, texPaper);  
+                //glActiveTexture(GL_TEXTURE0); 
+                //glBindTexture(GL_TEXTURE_2D, texturePaper);   
+                texturePaper->Bind(GL_TEXTURE0); 
                 glUniform1i(4, 0);   
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
             } 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(ComputerGraphics C CXX)
+project(ComputerGraphics C CXX) 
 
 # Slightly modified versions of the files from the cpp-starter-project by Jason Turner:
 # https://github.com/lefticus/cpp_starter_project/
@@ -48,4 +48,4 @@ foreach (shader_file IN LISTS shader_sources)
 	LIST(APPEND shader_copies "${CMAKE_BINARY_DIR}/shaders/${file_name}")
 endforeach()
 add_custom_target(copy_shaders DEPENDS ${shader_copies})
-add_dependencies(Watercolor copy_shaders)
+add_dependencies(Watercolor copy_shaders) 
