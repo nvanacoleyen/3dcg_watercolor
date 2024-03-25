@@ -66,3 +66,13 @@
 3524	3652	7330941725826904	framework/CGFramework.lib	c0972b1b05826f6a
 15	3955	7330941728958553	CMakeFiles/Watercolor.dir/src/main.cpp.obj	7c5d9ceeeb22ea87
 3955	5673	7330941732329851	Watercolor.exe	5b3dcdb1aa0a3bd9
+21	3975	7330949055612634	CMakeFiles/Watercolor.dir/src/main.cpp.obj	7c5d9ceeeb22ea87
+3976	5416	7330949059132943	Watercolor.exe	5b3dcdb1aa0a3bd9
+18	79	7330966291345060	shaders/plane_frag.glsl	a4ecbef0937580cf
+18	79	7330966291345060	C:/Users/jesse/Documents/WB/Master/3D Computer Graphics and Animation/Assignments/Final Project/Presentation/nvanacoleyen/3dcg_watercolor/out/build/x64-Debug/shaders/plane_frag.glsl	a4ecbef0937580cf
+25	81	7330966291414878	shaders/plane_vertex.glsl	fd2bd82e3e03df1d
+25	81	7330966291414878	C:/Users/jesse/Documents/WB/Master/3D Computer Graphics and Animation/Assignments/Final Project/Presentation/nvanacoleyen/3dcg_watercolor/out/build/x64-Debug/shaders/plane_vertex.glsl	fd2bd82e3e03df1d
+81	4948	7330966340003091	CMakeFiles/Watercolor.dir/src/main.cpp.obj	7c5d9ceeeb22ea87
+30	4958	7330966340122753	framework/CMakeFiles/CGFramework.dir/src/shader.cpp.obj	5ad5b42a0141ff14
+4958	5103	7330966341459508	framework/CGFramework.lib	c0972b1b05826f6a
+5103	6997	7330966347141380	Watercolor.exe	5b3dcdb1aa0a3bd9

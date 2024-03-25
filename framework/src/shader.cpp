@@ -53,6 +53,12 @@ void Shader::bind() const
     glUseProgram(m_program);
 }
 
+GLuint Shader::getProgram() const
+{
+    return m_program;
+}
+
+
 ShaderBuilder::~ShaderBuilder()
 {
     freeShaders();

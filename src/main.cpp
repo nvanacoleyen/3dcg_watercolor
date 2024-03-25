@@ -85,10 +85,10 @@ int main()
 
         const bool shiftPressed = window.isKeyPressed(GLFW_KEY_LEFT_SHIFT) || window.isKeyPressed(GLFW_KEY_RIGHT_SHIFT);
 
-        switch (key) {
-        default:
-            break;
-        };
+        //switch (key) {
+        //default:
+        //    break;
+        //};
     });
 
     const Shader circleShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/circle_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/line_frag.glsl").build(); 
@@ -107,24 +107,6 @@ int main()
     if (!texturePaper->Load()) {
         return 1;
     }
-    //GLuint texPaper;
-    //glGenTextures(1, &texPaper);
-    //glBindTexture(GL_TEXTURE_2D, texPaper);   
-    //// Set behavior for when texture coordinates are outside the [0, 1] range.
-    //glTextureParameteri(texPaper, GL_TEXTURE_WRAP_S, GL_REPEAT); 
-    //glTextureParameteri(texPaper, GL_TEXTURE_WRAP_T, GL_REPEAT); 
-    //// Set interpolation for texture sampling (GL_NEAREST for no interpolation).
-    //glTextureParameteri(texPaper, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
-    //glTextureParameteri(texPaper, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
-    ////// Plane TEXTURES
-    //int widthPaper, heightPaper, sourceNumChannels; // Number of channels in source image. pixels will always be the requested number of channels (3). 
-    //stbi_uc* paperTexture = stbi_load("resources/Watercolor_paper_texture.jpeg", &widthPaper, &heightPaper, &sourceNumChannels, STBI_rgb);
-    //if (paperTexture) {
-    //    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, widthPaper, heightPaper, 0, GL_RGB, GL_UNSIGNED_BYTE, paperTexture);
-    //}
-    //else {
-    //    std::cout << "Failed to load texture" << std::endl;
-    //}
     
     // Enable depth testing.
     glEnable(GL_DEPTH_TEST);  
@@ -157,15 +139,15 @@ int main()
         }
 
         planeShader.bind();
+        GLuint gSamplerLocation = glGetUniformLocation(planeShader.getProgram(), "gSampler");
         {   // Draw paper plane
             glViewport(0, 0, window.getWindowSize().x, window.getWindowSize().y); 
             vaoPlane.Bind(); 
             glm::vec3 colorPlane(1.0, 1.0, 1.0); 
-            {
-                //glActiveTexture(GL_TEXTURE0); 
-                //glBindTexture(GL_TEXTURE_2D, texturePaper);   
+            { 
                 texturePaper->Bind(GL_TEXTURE0); 
-                glUniform1i(4, 0);   
+                
+                glUniform1i(gSamplerLocation, 0);    
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
             } 
         }
