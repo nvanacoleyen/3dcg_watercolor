@@ -131,9 +131,8 @@ int main()
 
         // If LMB clicked -> m_pigmentConc of every cell within radius is 1.0
         if (window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT)) {
-            for (int j = 0; j < cursorCircle.m_radius; j++) { 
-                for (int i = 0; i < cursorCircle.m_radius; i++) { 
-                    Grid[WIDTH * j + i]->m_pigmentConc = 1.0; 
+            for (int j = cursorPos.y - cursorCircle.m_radius; j <= cursorPos.y + cursorCircle.m_radius; j++) { 
+                for (int i = cursorPos.x - cursorCircle.m_radius; i <= cursorPos.x + cursorCircle.m_radius; i++) {
                 }
             }
         }

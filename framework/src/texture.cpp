@@ -29,8 +29,8 @@ bool Texture::Load()
 
     glTexParameterf(m_textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(m_textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   
-    glTexParameterf(m_textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameterf(m_textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameterf(m_textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(m_textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glBindTexture(m_textureTarget, 0);
 
