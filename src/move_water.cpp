@@ -23,11 +23,35 @@ void UpdateVelocities(std::vector<std::shared_ptr<Cell>> M, staggered_grid u, st
 			for (int j = 0; j < HEIGHT; j++) {
 				float A = pow(u.get_at_pos(i, j), 2) - pow(u.get_at_pos(i + 1, j), 2) + (u.get_at_pos(i + 0.5, j - 0.5) * v.get_at_pos(i + 0.5, j - 0.5)) - (u.get_at_pos(i + 0.5, j + 0.5) * v.get_at_pos(i + 0.5, j + 0.5));
 				float B = u.get_at_pos(i + 1.5, j) + u.get_at_pos(i - 0.5, j) + u.get_at_pos(i + 0.5, j + 1) + u.get_at_pos(i + 0.5, j - 1) - 4 * u.get_at_pos(i + 0.5, j);
-				//new_u.
+				new_u.at(j * (WIDTH + 1) + (i + 1)) = u.get_at_pos(i + 0.5, j) + delta_t * (A - viscosity * B + p.at(j * WIDTH + i) - p.at(j * WIDTH + i + 1) + viscous_drag * u.get_at_pos(i + 0.5f, j));
 
-					/* Ok so my current problem is the positioning of all this, it is unclear if the grid goes to -0.5 or if the borders at position 0 just don't really exist. I think it probably treats position 0 as if it doesn't exist but we still need to discuss it somewhat. */
+				A = pow(v.get_at_pos(i, j), 2) - pow(v.get_at_pos(i, j + 1), 2) + (u.get_at_pos(i + 0.5, j - 0.5) * v.get_at_pos(i + 0.5, j - 0.5)) - (u.get_at_pos(i + 0.5, j + 0.5) * v.get_at_pos(i + 0.5, j + 0.5));
+				B = v.get_at_pos(i + 1, j + 0.5f) + v.get_at_pos(i - 0.5, j) + v.get_at_pos(i + 0.5, j + 1) + v.get_at_pos(i + 0.5, j - 1) - 4 * v.get_at_pos(i + 0.5, j);
+				new_v.at((j + 1) * WIDTH + i) = v.get_at_pos(i, j + 0.5) + delta_t * (A - viscosity * B + p.at(j * (WIDTH + 1) + i) - p.at((j + 1) * (WIDTH + 1) + i) - viscous_drag * v.get_at_pos(i, j + 0.5));
+
+				/* Ok so my current problem is the positioning of all this, it is unclear if the grid goes to -0.5 or if the borders at position 0 just don't really exist. I think it probably treats position 0 as if it doesn't exist but we still need to discuss it somewhat. */
 
 			}
+		}
+		u.set_new_data_values(new_u);
+		v.set_new_data_values(new_v);
+
+		EnforceBoundaryConditions(M, u, v);
+	}
+}
+
+/**
+ * Makes all the boundaries set to 0 when they are outisde of the wet areas.
+ */
+void EnforceBoundaryConditions(std::vector<std::shared_ptr<Cell>> M, staggered_grid u, staggered_grid v)
+{
+	for (int i = 0; i < M.size(); i++) {
+		std::shared_ptr<Cell> cell = M.at(i);
+
+		/* If the cell is not wet, we zero the surrounding velocities. */
+		if (!cell->is_wet) {
+			u.zero_at_pos(cell->m_position.x, cell->m_position.y);
+			v.zero_at_pos(cell->m_position.x, cell->m_position.y);
 		}
 	}
 }

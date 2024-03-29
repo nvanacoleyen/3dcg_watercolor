@@ -87,6 +87,11 @@ std::vector<float> staggered_grid::get_data_values(void)
 	return data_values;
 }
 
+int staggered_grid::num_data_points(void)
+{
+	return data_values.size();
+}
+
 
 
 /**
@@ -94,8 +99,8 @@ std::vector<float> staggered_grid::get_data_values(void)
  */
 float staggered_grid::get_at_pos(float x, float y)
 {
-	/* Checks that it is not out of bounds. */
-	if (x < -0.5f || x > width + 0.5f || y < -0.5f || y > height + 0.5f) { /* Some error*/ }
+	/* If out of bounds, velocity is 0. */
+	if (x < -0.5f || x > width + 0.5f || y < -0.5f || y > height + 0.5f) { return 0.f; }
 
 	/* Find if we are looking at a border or a centre. We look if it is a border, otherwise just assume it is a centre. */
 	bool is_x_border = (abs(x - trunc(x)) == 0.5);
@@ -174,6 +179,27 @@ float staggered_grid::get_at_pos(float x, float y)
 	}
 	
 	// return 0.0f; This is never reached anyway 
+}
+
+/**
+ * A function used to zero the boundaries on both ends of the given index coordinates.
+ */
+void staggered_grid::zero_at_pos(int x, int y)
+{
+	/* If out of bounds, do nothing. */
+	if (x < 0 || x > width || y < 0 || y > height) { return; }
+
+	/* Type of grid affects which positions are the 'borders'. */
+	if (x_axis) {
+		/* The first of the two boundaries to zero is at position x,y. the second is at x+1,y. */
+		data_values.at(y * width + x) = 0.f;
+		data_values.at(y * width + (x + 1)) = 0.f;
+	}
+	/* Otherwise we just do the same to the y axis. */
+	else {
+		data_values.at(y * width + x) = 0.f;
+		data_values.at((y + 1) * width + x) = 0.f;
+	}
 }
 
 float staggered_grid::max_value()

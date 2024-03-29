@@ -15,7 +15,10 @@ public:
 
 	void set_new_data_values(std::vector<float> new_data);
 	std::vector<float> get_data_values(void);
+	int num_data_points(void);
 	float get_at_pos(float x, float y);
+	void zero_at_pos(int x, int y);
+
 	float max_value();
 	float min_value();
 };
