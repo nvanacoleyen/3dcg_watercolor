@@ -11,6 +11,7 @@
 void UpdateVelocities(std::vector<std::shared_ptr<Cell>> M, staggered_grid u, staggered_grid v, std::vector<float> p)
 {
 	/* I don't really know how to do the first one just yet */
+	/* TODO: Add the (u,v) = (u,v) - delta H section */
 
 	float delta_t = 1 / std::max(u.max_value(), v.max_value());
 	for (float t = 0.f; t < 1.f; t += delta_t) {
