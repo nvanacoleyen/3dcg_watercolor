@@ -4,3 +4,5 @@
 
 void UpdateVelocities(std::vector<std::shared_ptr<Cell>> M, staggered_grid u, staggered_grid v, std::vector<float> p);
 void EnforceBoundaryConditions(std::vector<std::shared_ptr<Cell>> M, staggered_grid u, staggered_grid v);
+
+void RelaxDivergence(staggered_grid u, staggered_grid v, std::vector<float> p);

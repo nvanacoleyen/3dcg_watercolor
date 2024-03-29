@@ -20,8 +20,8 @@ void UpdateVelocities(std::vector<std::shared_ptr<Cell>> M, staggered_grid u, st
 		std::vector<float> new_u = u.get_data_values();
 		std::vector<float> new_v = v.get_data_values();
 
-		for (int i = 0; i < WIDTH; i++) {
-			for (int j = 0; j < HEIGHT; j++) {
+		for (int j = 0; j < HEIGHT; j++) {
+			for (int i = 0; i < WIDTH; i++) {
 				float A = pow(u.get_at_pos(i, j), 2) - pow(u.get_at_pos(i + 1, j), 2) + (u.get_at_pos(i + 0.5, j - 0.5) * v.get_at_pos(i + 0.5, j - 0.5)) - (u.get_at_pos(i + 0.5, j + 0.5) * v.get_at_pos(i + 0.5, j + 0.5));
 				float B = u.get_at_pos(i + 1.5, j) + u.get_at_pos(i - 0.5, j) + u.get_at_pos(i + 0.5, j + 1) + u.get_at_pos(i + 0.5, j - 1) - 4 * u.get_at_pos(i + 0.5, j);
 				new_u.at(j * (WIDTH + 1) + (i + 1)) = u.get_at_pos(i + 0.5, j) + delta_t * (A - viscosity * B + p.at(j * WIDTH + i) - p.at(j * WIDTH + i + 1) + viscous_drag * u.get_at_pos(i + 0.5f, j));
@@ -54,5 +54,43 @@ void EnforceBoundaryConditions(std::vector<std::shared_ptr<Cell>> M, staggered_g
 			u.zero_at_pos(cell->m_position.x, cell->m_position.y);
 			v.zero_at_pos(cell->m_position.x, cell->m_position.y);
 		}
+	}
+}
+
+/**
+ * `
+ */
+void RelaxDivergence(staggered_grid u, staggered_grid v, std::vector<float> p)
+{
+	int t = 0;
+
+
+	/* Putting the constants in this function as it isn't really a global constant */
+	int N = 50;
+	float tolerance = 0.01; /* tau */
+	float some_multiplier_idk_man = 0.1; /* xi */
+
+	float sigma_max = 0;
+	while (sigma_max < tolerance || t < N) {
+		/* It is very important to remember that u has width + 1, and v has height + 1. When setting the new values for all this we must keep that in mind, along with that when we have position i+0.5 for u, this is ceil + 1*/
+		std::vector<float> new_u = u.get_data_values();
+		std::vector<float> new_v = v.get_data_values();
+
+		for (int j = 0; j < HEIGHT; j++) {
+			for (int i = 0; i < WIDTH; i++) {
+				float sigma = some_multiplier_idk_man * (u.get_at_pos(i + 0.5f, j) - u.get_at_pos(i - 0.5f, j) + v.get_at_pos(i, j + 0.5) - v.get_at_pos(i, j - 0.5));
+				p.at(j * WIDTH + i) += sigma;
+				new_u.at(j * (WIDTH + 1) + i + 1) += sigma;
+				new_u.at(j * (WIDTH + 1) + i)     -= sigma;
+				new_u.at((j + 1) * WIDTH + i)     += sigma;
+				new_u.at(j * WIDTH + i)           -= sigma;
+				
+				sigma_max = std::max(sigma_max, sigma);
+			}
+		}
+		
+		u.set_new_data_values(new_u);
+		v.set_new_data_values(new_v);
+		t++;
 	}
 }
