@@ -23,10 +23,8 @@ DISABLE_WARNINGS_POP()
 #include <span>
 #include <vector>
 #include <memory> 
-
-// Configuration
-constexpr int WIDTH = 800;
-constexpr int HEIGHT = 600;
+#include "staggered_grid.h"
+#include "global_constants.h"
 
 Texture* texturePaper = NULL;
 
@@ -43,6 +41,8 @@ bool paperPlane = true;
 //unsigned int indicesLine[] = {
 //0, 1 // Indices to define the line segment using vertices array
 //};
+
+
 
 // Two triangles:
 float verticesPlane[] = {
@@ -66,6 +66,9 @@ int main()
     std::cout << "aspectratio: " << aspectRatio << "\n";
 
     Circle cursorCircle(&window, glm::vec2(0.0f), 0.1f, 4, 200); 
+
+    staggered_grid x_velocity(WIDTH, HEIGHT, true);
+    staggered_grid y_velocity(WIDTH, HEIGHT, false);
 
     // Create grid of cells
     std::vector<float> pigmentConcValues;
