@@ -1,8 +1,8 @@
-if(NOT EXISTS "C:/Users/jesse/Documents/WB/Master/3D Computer Graphics and Animation/Assignments/Final Project/Presentation/nvanacoleyen/3dcg_watercolor/out/build/x64-Debug/install_manifest.txt")
-  message(FATAL_ERROR "Cannot find install manifest: C:/Users/jesse/Documents/WB/Master/3D Computer Graphics and Animation/Assignments/Final Project/Presentation/nvanacoleyen/3dcg_watercolor/out/build/x64-Debug/install_manifest.txt")
+if(NOT EXISTS "C:/Users/jesse/Documents/WB/Master/3D_CG/Presentation/out/build/x64-Debug/install_manifest.txt")
+  message(FATAL_ERROR "Cannot find install manifest: C:/Users/jesse/Documents/WB/Master/3D_CG/Presentation/out/build/x64-Debug/install_manifest.txt")
 endif()
 
-file(READ "C:/Users/jesse/Documents/WB/Master/3D Computer Graphics and Animation/Assignments/Final Project/Presentation/nvanacoleyen/3dcg_watercolor/out/build/x64-Debug/install_manifest.txt" files)
+file(READ "C:/Users/jesse/Documents/WB/Master/3D_CG/Presentation/out/build/x64-Debug/install_manifest.txt" files)
 string(REGEX REPLACE "\n" ";" files "${files}")
 foreach(file ${files})
   message(STATUS "Uninstalling $ENV{DESTDIR}${file}")

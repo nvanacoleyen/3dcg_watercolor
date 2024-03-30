@@ -1,8 +1,8 @@
-# Install script for directory: C:/Users/jesse/Documents/WB/Master/3D Computer Graphics and Animation/Assignments/Final Project/Presentation/nvanacoleyen/3dcg_watercolor/framework/third_party/catch2
+# Install script for directory: C:/Users/jesse/Documents/WB/Master/3D_CG/Presentation/framework/third_party/catch2
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/Users/jesse/Documents/WB/Master/3D Computer Graphics and Animation/Assignments/Final Project/Presentation/nvanacoleyen/3dcg_watercolor/out/install/x64-Debug")
+  set(CMAKE_INSTALL_PREFIX "C:/Users/jesse/Documents/WB/Master/3D_CG/Presentation/out/install/x64-Debug")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -34,7 +34,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("C:/Users/jesse/Documents/WB/Master/3D Computer Graphics and Animation/Assignments/Final Project/Presentation/nvanacoleyen/3dcg_watercolor/out/build/x64-Debug/framework/third_party/catch2/src/cmake_install.cmake")
+  include("C:/Users/jesse/Documents/WB/Master/3D_CG/Presentation/out/build/x64-Debug/framework/third_party/catch2/src/cmake_install.cmake")
 
 endif()
 

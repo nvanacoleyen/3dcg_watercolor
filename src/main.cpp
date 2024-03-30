@@ -8,6 +8,7 @@ DISABLE_WARNINGS_PUSH()
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/vec3.hpp>
+#include <opencv2/opencv.hpp>  
 // Library for loading an image
 #include <stb/stb_image.h>
 DISABLE_WARNINGS_POP()
@@ -19,6 +20,7 @@ DISABLE_WARNINGS_POP()
 #include <framework/vertexbuffer.h>
 #include <framework/vertexarray.h>
 #include <framework/texture.h>
+#include <framework/SimplexNoise.h> 
 #include <iostream>
 #include <span>
 #include <vector>
@@ -58,6 +60,45 @@ unsigned int indicesPlane[] = {
     2, 3, 0   // second triangle
 };
 
+std::vector<std::vector<double>> generatePerlinNoise(int width, int height, int octaves, double lucanarity, double gain)
+{
+    std::vector<std::vector<double>> heightmap(height, std::vector<double>(width));
+
+    SimplexNoise noise;
+
+    // Generate simplex noise values for each point in a 2D grid
+    for (std::size_t y = 0; y < HEIGHT; ++y) {
+        for (std::size_t x = 0; x < WIDTH; ++x) {
+            double xPos = double(x) / double(WIDTH) - 0.5;
+            double yPos = double(y) / double(HEIGHT) - 0.5;
+
+            heightmap[y][x] = noise.signedFBM(xPos, yPos, octaves, lucanarity, gain);
+        }
+    }
+
+    return heightmap;
+}
+
+void normalizeHeightmap(std::vector<std::vector<double>>& heightmap) {
+    double min_height = DBL_MAX;
+    double max_height = -DBL_MAX;
+
+    for (const auto& row : heightmap) {
+        for (double height : row) {
+            if (height < min_height) min_height = height;
+            if (height > max_height) max_height = height;
+        }
+    }
+
+    double height_range = max_height - min_height;
+
+    for (auto& row : heightmap) {
+        for (double& height : row) {
+            height = (height - min_height) / height_range;
+        }
+    }
+}
+
 int main()
 {
     Window window{ "Watercolor", glm::ivec2(WIDTH, HEIGHT), OpenGLVersion::GL45 };
@@ -67,13 +108,24 @@ int main()
 
     Circle cursorCircle(&window, glm::vec2(0.0f), 0.1f, 4, 200); 
 
+    int octaves = 3;
+    double lucanarity = 2.1042;
+    double gain = 0.6;
+    std::vector<std::vector<double>> heightmap = generatePerlinNoise(WIDTH, HEIGHT, octaves, lucanarity, gain);
+    // Normalize heightmap values to range [0, 1]
+    normalizeHeightmap(heightmap);
+
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            std::cout << "value(" << x << "," << y << "): " << heightmap[y][x] << "\n";
+        }
+    }
+
     // Create grid of cells
-    std::vector<float> pigmentConcValues;
     std::vector<std::shared_ptr<Cell>> Grid;
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
             Grid.push_back(std::make_shared<Cell>(glm::vec2(i, j), 1));
-            pigmentConcValues.push_back(Grid[WIDTH * j + i]->m_pigmentConc);
         }
     }
     

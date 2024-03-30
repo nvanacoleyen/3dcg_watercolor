@@ -1,7 +1,7 @@
-prefix=C:/Users/jesse/Documents/WB/Master/3D Computer Graphics and Animation/Assignments/Final Project/Presentation/nvanacoleyen/3dcg_watercolor/out/install/x64-Debug
+prefix=C:/Users/jesse/Documents/WB/Master/3D_CG/Presentation/out/install/x64-Debug
 exec_prefix=${prefix}
-includedir=C:/Users/jesse/Documents/WB/Master/3D Computer Graphics and Animation/Assignments/Final Project/Presentation/nvanacoleyen/3dcg_watercolor/out/install/x64-Debug/include
-libdir=C:/Users/jesse/Documents/WB/Master/3D Computer Graphics and Animation/Assignments/Final Project/Presentation/nvanacoleyen/3dcg_watercolor/out/install/x64-Debug/lib
+includedir=C:/Users/jesse/Documents/WB/Master/3D_CG/Presentation/out/install/x64-Debug/include
+libdir=C:/Users/jesse/Documents/WB/Master/3D_CG/Presentation/out/install/x64-Debug/lib
 
 Name: GLFW
 Description: A multi-platform library for OpenGL, window and input
