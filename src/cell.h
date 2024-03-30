@@ -16,7 +16,7 @@ public:
 
     glm::vec2 m_position;
     float m_size;
-    float m_pigmentConc{ 0 };
+    float m_pigmentConc{ 0.2 };
     float m_waterConc{ 0 };
     bool is_wet;
 }; 

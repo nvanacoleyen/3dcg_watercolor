@@ -52,11 +52,11 @@ void Camera::rotateY(float angle)
 
 void Camera::updateInput()
 {
-    constexpr float moveSpeed = 0.05f;
+    constexpr float moveSpeed = 10.0f;
     constexpr float lookSpeed = 0.0035f;
 
     if (m_userInteraction) {
-        glm::vec3 localMoveDelta { 0 };
+        glm::vec3 localMoveDelta{ 0 };
         const glm::vec3 right = glm::normalize(glm::cross(m_forward, m_up));
         if (m_pWindow->isKeyPressed(GLFW_KEY_A))
             m_position -= moveSpeed * right;
@@ -66,7 +66,7 @@ void Camera::updateInput()
             m_position += moveSpeed * m_forward;
         if (m_pWindow->isKeyPressed(GLFW_KEY_S))
             m_position -= moveSpeed * m_forward;
-        if (m_pWindow->isKeyPressed(GLFW_KEY_R))
+        if (m_pWindow->isKeyPressed(GLFW_KEY_E))
             m_position += moveSpeed * m_up;
         if (m_pWindow->isKeyPressed(GLFW_KEY_F))
             m_position -= moveSpeed * m_up;
@@ -81,31 +81,8 @@ void Camera::updateInput()
             if (delta.y != 0.0f)
                 rotateX(delta.y);
         }
-    } else {
-        m_prevCursorPos = m_pWindow->getCursorPos();
     }
-}
-
-void Camera::updateInputLight()
-{
-    constexpr float moveSpeed = 0.05f;
-    constexpr float lookSpeed = 0.0035f;
-
-    if (m_userInteraction) {
-        glm::vec3 localMoveDelta{ 0 };
-        const glm::vec3 right = glm::normalize(glm::cross(m_forward, m_up)); 
-        const glm::vec3 forwardAxis = glm::normalize(glm::cross(m_up, right)); 
-        if (m_pWindow->isKeyPressed(GLFW_KEY_LEFT))
-            m_position -= moveSpeed * right;
-        if (m_pWindow->isKeyPressed(GLFW_KEY_RIGHT))
-            m_position += moveSpeed * right;
-        if (m_pWindow->isKeyPressed(GLFW_KEY_UP))
-            m_position += moveSpeed * forwardAxis; 
-        if (m_pWindow->isKeyPressed(GLFW_KEY_DOWN))
-            m_position -= moveSpeed * forwardAxis; 
-        if (m_pWindow->isKeyPressed(GLFW_KEY_O))
-            m_position += moveSpeed * m_up;
-        if (m_pWindow->isKeyPressed(GLFW_KEY_L))
-            m_position -= moveSpeed * m_up;
+    else {
+        m_prevCursorPos = m_pWindow->getCursorPos();
     }
 }
