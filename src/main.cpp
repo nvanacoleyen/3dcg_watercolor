@@ -1,6 +1,11 @@
 #include "camera.h"
 #include "cell.h"
 #include "circle.h"
+#include "staggered_grid.h"
+#include "global_constants.h"
+#include "move_water.h"
+#include "move_pigment.h"
+
 // Suppress warnings in third-party code.
 #include <framework/disable_all_warnings.h>
 DISABLE_WARNINGS_PUSH()
@@ -23,8 +28,7 @@ DISABLE_WARNINGS_POP()
 #include <span>
 #include <vector>
 #include <memory> 
-#include "staggered_grid.h"
-#include "global_constants.h"
+
 
 Texture* texturePaper = NULL;
 
@@ -67,16 +71,17 @@ int main()
 
     Circle cursorCircle(&window, glm::vec2(0.0f), 0.1f, 4, 200); 
 
-    staggered_grid x_velocity(WIDTH, HEIGHT, true);
-    staggered_grid y_velocity(WIDTH, HEIGHT, false);
+    Staggered_Grid x_velocity(WIDTH, HEIGHT, true);
+    Staggered_Grid y_velocity(WIDTH, HEIGHT, false);
+    std::vector<float> water_pressure(WIDTH * HEIGHT, 0.f);
 
     // Create grid of cells
     std::vector<float> pigmentConcValues;
-    std::vector<std::shared_ptr<Cell>> Grid;
+    std::vector<Cell> Grid;
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
-            Grid.push_back(std::make_shared<Cell>(glm::vec2(i, j), 1));
-            pigmentConcValues.push_back(Grid[WIDTH * j + i]->m_pigmentConc);
+            Grid.push_back(Cell(glm::vec2(i, j), 1));
+            pigmentConcValues.push_back(Grid[WIDTH * j + i].m_pigmentConc);
         }
     }
     
@@ -170,6 +175,14 @@ int main()
         }
         // Re-enable depth testing
         glEnable(GL_DEPTH_TEST); 
+
+        /* Move water functions. */
+        //UpdateVelocities(Grid, &x_velocity, &y_velocity, water_pressure);
+        //RelaxDivergence(&x_velocity, &y_velocity, water_pressure);
+        /* Here we would do flow outward if we are implementing that function */
+
+        /* Pigment functions */
+        //movePigment(Grid, &x_velocity, &y_velocity);
 
         glfwPollEvents();
 

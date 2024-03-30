@@ -1,7 +1,13 @@
+#ifndef MOVE_PIGMENT_H
+#define MOVE_PIGMENT_H
+
+
 #pragma once
 #include "cell.h"
 #include "staggered_grid.h"
 #include <vector>
 
 
-std::vector<std::shared_ptr<Cell>> movePigment(std::vector<std::shared_ptr<Cell>> M, staggered_grid u, staggered_grid v, std::vector<std::shared_ptr<Cell>> Grid);
+void movePigment(std::vector<Cell> Grid, Staggered_Grid* u, Staggered_Grid* v);
+
+#endif // !MOVE_PIGMENT_H

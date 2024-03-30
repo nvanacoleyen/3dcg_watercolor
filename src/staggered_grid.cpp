@@ -55,7 +55,7 @@ float get_from_grid(std::vector<float> grid, int grid_width, int grid_height, in
  * The staggered grid stores the data of the border positions, and must calculate the data in the centres. 
  * The axis boolean shows which axis the borders are being stored at. 
  */
-staggered_grid::staggered_grid(int width, int height, bool x_axis):
+Staggered_Grid::Staggered_Grid(int width, int height, bool x_axis):
 	// data_values(std::vector((width + 1) * (height + 1), 0.f)),
 	// width(width),
 	// height(height),
@@ -77,17 +77,17 @@ staggered_grid::staggered_grid(int width, int height, bool x_axis):
 /** 
  * This is probably a valid way to set this
  */
-void staggered_grid::set_new_data_values(std::vector<float> new_data)
+void Staggered_Grid::set_new_data_values(std::vector<float> new_data)
 {
 	data_values = new_data;
 }
 
-std::vector<float> staggered_grid::get_data_values(void)
+std::vector<float> Staggered_Grid::get_data_values(void)
 {
 	return data_values;
 }
 
-int staggered_grid::num_data_points(void)
+int Staggered_Grid::num_data_points(void)
 {
 	return data_values.size();
 }
@@ -97,7 +97,7 @@ int staggered_grid::num_data_points(void)
 /**
  * Gets the data at the relevant grid position. The staggered grid stores the data of the edge positions, and must calculate the 
  */
-float staggered_grid::get_at_pos(float x, float y)
+float Staggered_Grid::get_at_pos(float x, float y)
 {
 	/* If out of bounds, velocity is 0. */
 	if (x < -0.5f || x > width + 0.5f || y < -0.5f || y > height + 0.5f) { return 0.f; }
@@ -184,7 +184,7 @@ float staggered_grid::get_at_pos(float x, float y)
 /**
  * A function used to zero the boundaries on both ends of the given index coordinates.
  */
-void staggered_grid::zero_at_pos(int x, int y)
+void Staggered_Grid::zero_at_pos(int x, int y)
 {
 	/* If out of bounds, do nothing. */
 	if (x < 0 || x > width || y < 0 || y > height) { return; }
@@ -202,7 +202,7 @@ void staggered_grid::zero_at_pos(int x, int y)
 	}
 }
 
-float staggered_grid::max_value()
+float Staggered_Grid::max_value()
 {
 	float max_value = std::numeric_limits<float>::min();
 	for (int i = 0; i < data_values.size(); i++) {
@@ -211,7 +211,7 @@ float staggered_grid::max_value()
 	return max_value;
 }
 
-float staggered_grid::min_value()
+float Staggered_Grid::min_value()
 {
 	float min_value = std::numeric_limits<float>::max();
 	for (int i = 0; i < data_values.size(); i++) {
