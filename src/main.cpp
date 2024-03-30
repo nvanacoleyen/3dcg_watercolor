@@ -1,6 +1,10 @@
 #include "cell.h"
 #include "circle.h"
 #include "heightmap.h"
+#include "staggered_grid.h"
+#include "global_constants.h"
+#include "move_water.h"
+#include "move_pigment.h"
 // Suppress warnings in third-party code.
 #include <framework/disable_all_warnings.h>
 DISABLE_WARNINGS_PUSH()
@@ -25,9 +29,6 @@ DISABLE_WARNINGS_POP()
 #include <vector>
 #include <memory> 
 
-// Configuration
-constexpr int WIDTH = 800;
-constexpr int HEIGHT = 600;
 
 Texture* texturePaper = NULL;
 
@@ -44,6 +45,8 @@ bool paperPlane = true;
 //unsigned int indicesLine[] = {
 //0, 1 // Indices to define the line segment using vertices array
 //};
+
+
 
 // Two triangles:
 float verticesPlane[] = {
@@ -81,6 +84,11 @@ int main()
     //std::vector<float> createHeightmapVertices(const char* imagePath);
     //std::vector<unsigned int> createHeightmapIndices(const char* imagePath);
     //void drawHeightmap(const char* imagePath, std::vector<float> vertices, std::vector<unsigned int> indices);
+
+    // Create grid of cells
+    Staggered_Grid x_velocity(WIDTH, HEIGHT, true);
+    Staggered_Grid y_velocity(WIDTH, HEIGHT, false);
+    std::vector<float> water_pressure(WIDTH * HEIGHT, 0.f);
 
     // Create grid of cells
     std::vector<Cell> Grid;
@@ -181,6 +189,14 @@ int main()
         }
         // Re-enable depth testing
         glEnable(GL_DEPTH_TEST); 
+
+        /* Move water functions. */
+        //UpdateVelocities(Grid, &x_velocity, &y_velocity, water_pressure);
+        //RelaxDivergence(&x_velocity, &y_velocity, water_pressure);
+        /* Here we would do flow outward if we are implementing that function */
+
+        /* Pigment functions */
+        //movePigment(Grid, &x_velocity, &y_velocity);
 
         glfwPollEvents();
 
