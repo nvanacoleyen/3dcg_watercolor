@@ -15,7 +15,13 @@ else()
 	add_subdirectory("../../../framework/" "${CMAKE_BINARY_DIR}/framework/")
 endif()
 
-add_executable(Watercolor "src/main.cpp" "src/camera.cpp"    "src/cell.h" "src/cell.cpp" "src/circle.h" "src/circle.cpp")
+add_executable(Watercolor 	"src/main.cpp" 
+				"src/cell.h" 
+				"src/cell.cpp" 
+				"src/circle.h" 
+				"src/circle.cpp" 
+				"src/heightmap.h"
+				"src/heightmap.cpp")
 target_compile_features(Watercolor PRIVATE cxx_std_20)
 target_link_libraries(Watercolor PRIVATE CGFramework)
 enable_sanitizers(Watercolor)

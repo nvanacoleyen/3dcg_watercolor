@@ -339,7 +339,7 @@
 				{
 					"directoryIndex" : 1,
 					"id" : "CGFramework::@217a96c3a62328a73ef4",
-					"jsonFile" : "target-CGFramework-Debug-18e4fe47809aeb603b4e.json",
+					"jsonFile" : "target-CGFramework-Debug-386103c2bee4244d66c7.json",
 					"name" : "CGFramework",
 					"projectIndex" : 0
 				},
@@ -360,14 +360,14 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "Watercolor::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-Watercolor-Debug-fc0633d32395970ccb8c.json",
+					"jsonFile" : "target-Watercolor-Debug-f708055a51634e05e674.json",
 					"name" : "Watercolor",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
 					"id" : "copy_shaders::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-copy_shaders-Debug-68a827262b57550d1376.json",
+					"jsonFile" : "target-copy_shaders-Debug-f2fb48a6eae91cd333b5.json",
 					"name" : "copy_shaders",
 					"projectIndex" : 0
 				},

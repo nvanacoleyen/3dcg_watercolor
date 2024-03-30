@@ -160,11 +160,11 @@
 	[
 		{
 			"backtrace" : 3,
-			"id" : "fmt::@0dd0d94e1dc15276fb9a"
+			"id" : "glad::@37fc3951361369fd0aab"
 		},
 		{
 			"backtrace" : 3,
-			"id" : "glad::@37fc3951361369fd0aab"
+			"id" : "fmt::@0dd0d94e1dc15276fb9a"
 		},
 		{
 			"backtrace" : 3,

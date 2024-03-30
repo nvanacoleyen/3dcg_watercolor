@@ -1,6 +1,6 @@
-#include "camera.h"
 #include "cell.h"
 #include "circle.h"
+#include "heightmap.h"
 // Suppress warnings in third-party code.
 #include <framework/disable_all_warnings.h>
 DISABLE_WARNINGS_PUSH()
@@ -8,7 +8,6 @@ DISABLE_WARNINGS_PUSH()
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/vec3.hpp>
-#include <opencv2/opencv.hpp>  
 // Library for loading an image
 #include <stb/stb_image.h>
 DISABLE_WARNINGS_POP()
@@ -20,8 +19,8 @@ DISABLE_WARNINGS_POP()
 #include <framework/vertexbuffer.h>
 #include <framework/vertexarray.h>
 #include <framework/texture.h>
-#include <framework/SimplexNoise.h> 
-#include <iostream>
+
+#include <iostream> 
 #include <span>
 #include <vector>
 #include <memory> 
@@ -60,88 +59,35 @@ unsigned int indicesPlane[] = {
     2, 3, 0   // second triangle
 };
 
-std::vector<std::vector<double>> generatePerlinNoise(int width, int height, int octaves, double lucanarity, double gain)
-{
-    std::vector<std::vector<double>> heightmap(height, std::vector<double>(width));
 
-    SimplexNoise noise;
-
-    // Generate simplex noise values for each point in a 2D grid
-    for (std::size_t y = 0; y < HEIGHT; ++y) {
-        for (std::size_t x = 0; x < WIDTH; ++x) {
-            double xPos = double(x) / double(WIDTH) - 0.5;
-            double yPos = double(y) / double(HEIGHT) - 0.5;
-
-            heightmap[y][x] = noise.signedFBM(xPos, yPos, octaves, lucanarity, gain);
-        }
-    }
-
-    return heightmap;
-}
-
-void normalizeHeightmap(std::vector<std::vector<double>>& heightmap) {
-    double min_height = DBL_MAX;
-    double max_height = -DBL_MAX;
-
-    for (const auto& row : heightmap) {
-        for (double height : row) {
-            if (height < min_height) min_height = height;
-            if (height > max_height) max_height = height;
-        }
-    }
-
-    double height_range = max_height - min_height;
-
-    for (auto& row : heightmap) {
-        for (double& height : row) {
-            height = (height - min_height) / height_range;
-        }
-    }
-}
-
-// Function to visualize the heightmap using OpenCV
-void visualizeHeightmap(const std::vector<std::vector<double>>& heightmap) {
-    // Create an OpenCV Mat object to store the image
-    cv::Mat image(heightmap.size(), heightmap[0].size(), CV_8UC1);
-
-    // Iterate over each pixel in the heightmap
-    for (int y = 0; y < heightmap.size(); ++y) {
-        for (int x = 0; x < heightmap[y].size(); ++x) {
-            // Convert the normalized height value to pixel intensity (0-255)
-            int intensity = static_cast<int>(heightmap[y][x] * 255);
-
-            // Set the pixel value in the image
-            image.at<uchar>(y, x) = intensity;
-        }
-    }
-
-    // Display the image using OpenCV
-    cv::imshow("Heightmap", image);
-    cv::waitKey(0);
-}
 
 int main()
 {
     Window window{ "Watercolor", glm::ivec2(WIDTH, HEIGHT), OpenGLVersion::GL45 };
     float aspectRatio = window.getAspectRatio();
+    window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
 
     std::cout << "aspectratio: " << aspectRatio << "\n";
 
     Circle cursorCircle(&window, glm::vec2(0.0f), 0.1f, 4, 200); 
 
-    int octaves = 3;
+    int octaves = 5;
     double lucanarity = 2.1042;
     double gain = 0.6;
-    std::vector<std::vector<double>> heightmap = generatePerlinNoise(WIDTH, HEIGHT, octaves, lucanarity, gain);
+    std::vector<std::vector<double>> heightmap = generatePerlinNoise(WIDTH, HEIGHT, octaves, lucanarity, gain);  
     // Normalize heightmap values to range [0, 1]
-    normalizeHeightmap(heightmap);
-    visualizeHeightmap(heightmap); 
+    normalizeHeightmap(heightmap);  
+    //visualizeHeightmap(heightmap);   
+    //std::vector<float> createHeightmapVertices(const char* imagePath);
+    //std::vector<unsigned int> createHeightmapIndices(const char* imagePath);
+    //void drawHeightmap(const char* imagePath, std::vector<float> vertices, std::vector<unsigned int> indices);
 
     // Create grid of cells
-    std::vector<std::shared_ptr<Cell>> Grid;
+    std::vector<Cell> Grid;
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
-            Grid.push_back(std::make_shared<Cell>(glm::vec2(i, j), 1));
+            Grid.push_back(Cell(glm::vec2(i, j), 1));
+            Grid[i, j].m_height = heightmap[j][i];
         }
     }
     

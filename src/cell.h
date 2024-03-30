@@ -18,4 +18,5 @@ public:
     float m_size;
     float m_pigmentConc{ 0 };
     float m_waterConc{ 0 };
+    double m_height{ 0 };
 }; 
