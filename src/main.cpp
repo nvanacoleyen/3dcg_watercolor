@@ -99,6 +99,27 @@ void normalizeHeightmap(std::vector<std::vector<double>>& heightmap) {
     }
 }
 
+// Function to visualize the heightmap using OpenCV
+void visualizeHeightmap(const std::vector<std::vector<double>>& heightmap) {
+    // Create an OpenCV Mat object to store the image
+    cv::Mat image(heightmap.size(), heightmap[0].size(), CV_8UC1);
+
+    // Iterate over each pixel in the heightmap
+    for (int y = 0; y < heightmap.size(); ++y) {
+        for (int x = 0; x < heightmap[y].size(); ++x) {
+            // Convert the normalized height value to pixel intensity (0-255)
+            int intensity = static_cast<int>(heightmap[y][x] * 255);
+
+            // Set the pixel value in the image
+            image.at<uchar>(y, x) = intensity;
+        }
+    }
+
+    // Display the image using OpenCV
+    cv::imshow("Heightmap", image);
+    cv::waitKey(0);
+}
+
 int main()
 {
     Window window{ "Watercolor", glm::ivec2(WIDTH, HEIGHT), OpenGLVersion::GL45 };
@@ -114,12 +135,7 @@ int main()
     std::vector<std::vector<double>> heightmap = generatePerlinNoise(WIDTH, HEIGHT, octaves, lucanarity, gain);
     // Normalize heightmap values to range [0, 1]
     normalizeHeightmap(heightmap);
-
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            std::cout << "value(" << x << "," << y << "): " << heightmap[y][x] << "\n";
-        }
-    }
+    visualizeHeightmap(heightmap); 
 
     // Create grid of cells
     std::vector<std::shared_ptr<Cell>> Grid;
