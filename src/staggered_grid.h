@@ -23,6 +23,7 @@ public:
 	//float get_from_grid(int x_pos, int y_pos);
 
 	void zero_at_pos(int x, int y);
+	void change_at_pos_by(int x, int y, float delta);
 
 	float max_value();
 	float min_value();

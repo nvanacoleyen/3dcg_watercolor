@@ -124,6 +124,7 @@ int main()
                 for (int i = cursorPos.x - cursorCircle.m_radius; i <= cursorPos.x + cursorCircle.m_radius; i++) {
                     if (waterBrush) {
                         Grid[WIDTH * j + i].m_waterConc = 1;
+                        Grid[WIDTH * j + i].is_wet = true;
                     }
                     else {
                         Grid[WIDTH * j + i].m_pigmentConc = 0.5;

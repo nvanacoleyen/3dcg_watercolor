@@ -12,6 +12,19 @@ void UpdateVelocities(std::vector<Cell>* M, Staggered_Grid* u, Staggered_Grid* v
 {
 	/* I don't really know how to do the first one just yet */
 	/* TODO: Add the (u,v) = (u,v) - delta H section */
+	for (int j = 0; j < HEIGHT - 1; j++) {
+		for (int i = 0; i < WIDTH - 1; i++) {
+			glm::vec2 pos = M->at((j * WIDTH) + i).m_position;
+			if (pos.x >= WIDTH || pos.y >= HEIGHT) { continue; }
+
+			float u_delta_h = M->at((j * WIDTH) + i).m_height - M->at((j * WIDTH) + i + 1).m_height;
+			float v_delta_h = M->at((j * WIDTH) + i).m_height - M->at(((j + 1) * WIDTH) + i).m_height;
+
+			/* We add 1 to make it the boundary from this square to the next one. We wont go out of bounds becuse of the limits in the for loop. */
+			u->change_at_pos_by(i + 1, j, u_delta_h);
+			v->change_at_pos_by(i, j + 1, v_delta_h);
+		}
+	}
 	//Staggered_Grid u = *u_pointer;
 	//Staggered_Grid v = *v_pointer;
 
@@ -22,8 +35,8 @@ void UpdateVelocities(std::vector<Cell>* M, Staggered_Grid* u, Staggered_Grid* v
 		std::vector<float> new_u = u->get_data_values();
 		std::vector<float> new_v = v->get_data_values();
 
-		for (int j = 1; j < HEIGHT - 1; j++) {
-			for (int i = 1; i < WIDTH - 1; i++) {
+		for (int j = 0; j < HEIGHT; j++) {
+			for (int i = 0; i < WIDTH; i++) {
 				float A = pow(u->get_at_pos(i, j), 2) - pow(u->get_at_pos(i + 1, j), 2) + (u->get_at_pos(i + 0.5f, j - 0.5f) * v->get_at_pos(i + 0.5f, j - 0.5f)) - (u->get_at_pos(i + 0.5f, j + 0.5f) * v->get_at_pos(i + 0.5f, j + 0.5f));
 				float B = u->get_at_pos(i + 1.5f, j) + u->get_at_pos(i - 0.5f, j) + u->get_at_pos(i + 0.5f, j + 1.f) + u->get_at_pos(i + 0.5f, j - 1.f) - 4 * u->get_at_pos(i + 0.5f, j);
 				new_u[j * (WIDTH + 1) + (i + 1)] = u->get_at_pos(i + 0.5f, j) + delta_t * (A - viscosity * B + get_from_grid(p, WIDTH, HEIGHT, i, j) - get_from_grid(p, WIDTH, HEIGHT, i + 1, j) + viscous_drag * u->get_at_pos(i + 0.5f, j));
@@ -51,6 +64,7 @@ void UpdateVelocities(std::vector<Cell>* M, Staggered_Grid* u, Staggered_Grid* v
  */
 void EnforceBoundaryConditions(std::vector<Cell>* M, Staggered_Grid* u, Staggered_Grid* v)
 {
+	int count = 0;
 	for (int i = 0; i < M->size(); i++) {
 		Cell* cell = &(M->at(i));
 
@@ -59,7 +73,11 @@ void EnforceBoundaryConditions(std::vector<Cell>* M, Staggered_Grid* u, Staggere
 			u->zero_at_pos(cell->m_position.x, cell->m_position.y);
 			v->zero_at_pos(cell->m_position.x, cell->m_position.y);
 		}
+		if (cell->is_wet) {
+			count++;
+		}
 	}
+	count++;
 }
 
 /**

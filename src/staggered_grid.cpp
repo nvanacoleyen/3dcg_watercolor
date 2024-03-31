@@ -204,6 +204,15 @@ void Staggered_Grid::zero_at_pos(int x, int y)
 	}
 }
 
+
+void Staggered_Grid::change_at_pos_by(int x, int y, float delta)
+{
+	/* If out of bounds, do nothing. */
+	if (x < 0 || x > width || y < 0 || y > height) { return; }
+	data_values.at(y * width + x) += delta;
+
+}
+
 float Staggered_Grid::max_value()
 {
 	float max_value = std::numeric_limits<float>::min();
