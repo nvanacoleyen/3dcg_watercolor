@@ -30,6 +30,7 @@ DISABLE_WARNINGS_POP()
 #include <memory> 
 
 bool cursorCircle = true;
+bool waterBrush = true;
 
 int main()
 {
@@ -42,7 +43,7 @@ int main()
 
     std::cout << "aspectratio: " << aspectRatio << "\n";
 
-    Circle cursorCircle(&window, glm::vec2(0.0f), 10, 4, 200); 
+    Circle cursorCircle(&window, glm::vec2(0.0f), 5, 4, 200); 
 
     Staggered_Grid x_velocity(WIDTH, HEIGHT, true);
     Staggered_Grid y_velocity(WIDTH, HEIGHT, false);
@@ -64,10 +65,13 @@ int main()
 
         const bool shiftPressed = window.isKeyPressed(GLFW_KEY_LEFT_SHIFT) || window.isKeyPressed(GLFW_KEY_RIGHT_SHIFT);
 
-        //switch (key) {
-        //default:
-        //    break;
-        //};
+        switch (key) {
+        case GLFW_KEY_B:
+            waterBrush = !waterBrush;
+            break;
+        default:
+            break;
+        };
     });
 
     const Shader circleShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/circle_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/line_frag.glsl").build(); 
@@ -99,10 +103,14 @@ int main()
         if (window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT)) {
             for (int j = cursorPos.y - cursorCircle.m_radius; j <= cursorPos.y + cursorCircle.m_radius; j++) { 
                 for (int i = cursorPos.x - cursorCircle.m_radius; i <= cursorPos.x + cursorCircle.m_radius; i++) {
-                    Grid[WIDTH * j + i].m_pigmentConc += 1;
+                    if (waterBrush) {
+                        Grid[WIDTH * j + i].m_waterConc = 1;
+                    }
+                    else {
+                        Grid[WIDTH * j + i].m_pigmentConc = 0.5;
+                    }
                 }
             }
-            //Grid[WIDTH * cursorPos.y + cursorPos.x].m_pigmentConc += 1;
         }
         
  
@@ -119,12 +127,24 @@ int main()
         /* RENDER GRID */
         std::vector<float> vertices;
         for (const auto& cell : Grid) {
-            float pig = cell.m_pigmentConc;
+
+            glm::vec3 color;
+
+            if (cell.m_waterConc == 1 && cell.m_pigmentConc == 0) {
+                color = glm::vec3(0.7);
+            }
+            else if (cell.m_pigmentConc != 0) {
+                color = glm::vec3(cell.m_pigmentConc, 0, 0);
+            }
+            else {
+                color = glm::vec3(1);
+            }
+
             vertices.insert(vertices.end(), {
-                cell.m_position.x, cell.m_position.y, 0.0f, pig, pig, pig,
-                cell.m_position.x + 1, cell.m_position.y, 0.0f, pig, pig, pig,
-                cell.m_position.x, cell.m_position.y + 1, 0.0f, pig, pig, pig,
-                cell.m_position.x + 1, cell.m_position.y + 1, 0.0f, pig, pig, pig
+                cell.m_position.x, cell.m_position.y, 0.0f, color.r, color.g, color.b,
+                cell.m_position.x + 1, cell.m_position.y, 0.0f, color.r, color.g, color.b,
+                cell.m_position.x, cell.m_position.y + 1, 0.0f, color.r, color.g, color.b,
+                cell.m_position.x + 1, cell.m_position.y + 1, 0.0f, color.r, color.g, color.b
                 });
         }
 
