@@ -5,7 +5,7 @@
 
 float grid_halfway_point(std::vector<float> grid, int grid_width, int grid_height, double x_pos, double y_pos);
 
-float get_from_grid(std::vector<float> grid, int grid_width, int grid_height, int x_pos, int y_pos);
+float get_from_grid(std::vector<float>* grid, int grid_width, int grid_height, int x_pos, int y_pos);
 
 class Staggered_Grid {
 public:
@@ -20,6 +20,8 @@ public:
 	std::vector<float> get_data_values(void);
 	int num_data_points(void);
 	float get_at_pos(float x, float y);
+	//float get_from_grid(int x_pos, int y_pos);
+
 	void zero_at_pos(int x, int y);
 
 	float max_value();

@@ -3,12 +3,12 @@
 #include <cmath>
 
 /* For some reason M is never used despite the algorithm saying that it should be included in it. */
-void movePigment(std::vector<Cell> Grid, Staggered_Grid* u, Staggered_Grid* v)
+void movePigment(std::vector<Cell>* Grid, Staggered_Grid* u, Staggered_Grid* v)
 {
 
 	/* Create new grid of pigments */
-	std::vector<Cell> new_Grid = Grid;
-	std::vector<Cell> current_Grid = Grid;
+	std::vector<Cell> new_Grid = *Grid;
+	std::vector<Cell> current_Grid = *Grid;
 
 	float delta_t = 1 / std::ceil(std::max(u->max_value(), v->max_value()));
 	for (float t = 0.f; t <= 1.f; t += delta_t) {
@@ -34,7 +34,7 @@ void movePigment(std::vector<Cell> Grid, Staggered_Grid* u, Staggered_Grid* v)
 
 	}
 
-	Grid = new_Grid;
+	Grid = &new_Grid;
 
 	//return new_Grid;
 }

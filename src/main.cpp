@@ -190,12 +190,12 @@ int main()
         glEnable(GL_DEPTH_TEST); 
 
         /* Move water functions. */
-        //UpdateVelocities(Grid, &x_velocity, &y_velocity, water_pressure);
-        //RelaxDivergence(&x_velocity, &y_velocity, water_pressure);
+        UpdateVelocities(&Grid, &x_velocity, &y_velocity, &water_pressure);
+        RelaxDivergence(&x_velocity, &y_velocity, &water_pressure);
         /* Here we would do flow outward if we are implementing that function */
 
         /* Pigment functions */
-        //movePigment(Grid, &x_velocity, &y_velocity);
+        movePigment(&Grid, &x_velocity, &y_velocity);
 
         glfwPollEvents();
 
