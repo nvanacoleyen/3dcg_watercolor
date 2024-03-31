@@ -42,11 +42,9 @@ float grid_halfway_point(std::vector<float> grid, int gridWidth, int gridLength,
 
 float get_from_grid(std::vector<float>* grid, int grid_width, int grid_height, int x_pos, int y_pos)
 {
-	return 2.f;
-
 	/* If the x or y positions are out of bounds of the grid, the velocities will just be 0 for that position. */
-	if ((x_pos < 0) || (x_pos > grid_width)) { return 0; }
-	if ((y_pos < 0) || (y_pos > grid_height)) { return 0; }
+	if ((x_pos < 0) || (x_pos > grid_width - 1)) { return 0; }
+	if ((y_pos < 0) || (y_pos > grid_height - 1)) { return 0; }
 
 	int grid_position = grid_width * y_pos + x_pos;
 
@@ -105,8 +103,8 @@ float Staggered_Grid::get_at_pos(float x, float y)
 	if (x < -0.5f || x > width + 0.5f || y < -0.5f || y > height + 0.5f) { return 0.f; }
 
 	/* Find if we are looking at a border or a centre. We look if it is a border, otherwise just assume it is a centre. */
-	bool is_x_border = true;//(abs(x - trunc(x)) == 0.5);
-	bool is_y_border = true;//(abs(y - trunc(y)) == 0.5);
+	bool is_x_border = (abs(x - trunc(x)) == 0.5);
+	bool is_y_border = (abs(y - trunc(y)) == 0.5);
 
 	/* This is quite ugly */
 	/* The calculation depends on which axes this is. With all of the  */

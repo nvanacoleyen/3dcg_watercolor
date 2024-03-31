@@ -34,7 +34,7 @@ void movePigment(std::vector<Cell>* Grid, Staggered_Grid* u, Staggered_Grid* v)
 
 	}
 
-	Grid = &new_Grid;
+	*Grid = new_Grid;
 
 	//return new_Grid;
 }

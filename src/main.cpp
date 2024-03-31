@@ -69,8 +69,7 @@ int main()
     std::vector<Cell> Grid;
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
-            Grid.push_back(Cell(glm::vec2(i, j), 1));
-            Grid[i, j].m_height = heightmap[j][i];
+            Grid.push_back(Cell(glm::vec2(i, j), 1, heightmap[j][i]));
         }
     }
 

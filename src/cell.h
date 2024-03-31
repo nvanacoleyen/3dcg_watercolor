@@ -11,13 +11,13 @@ DISABLE_WARNINGS_POP()
 class Cell {
 public:
 
-    Cell(glm::vec2 pos, float size)
-        : m_position(pos), m_size(size), is_wet(false) {};
+    Cell(glm::vec2 pos, float size, double m_height)
+        : m_position(pos), m_size(size), m_height(m_height), is_wet(false) {};
 
     glm::vec2 m_position;
     float m_size;
+    double m_height;
     float m_pigmentConc{ 0 };
     float m_waterConc{ 0 };
-    double m_height{ 0 };
     bool is_wet;
 }; 
