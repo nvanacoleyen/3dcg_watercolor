@@ -1,11 +1,11 @@
-#include "camera.h"
 #include "cell.h"
 #include "circle.h"
+#include "heightmap.h"
 #include "staggered_grid.h"
 #include "global_constants.h"
 #include "move_water.h"
 #include "move_pigment.h"
-
+#include "camera.h"
 // Suppress warnings in third-party code.
 #include <framework/disable_all_warnings.h>
 DISABLE_WARNINGS_PUSH()
@@ -24,13 +24,16 @@ DISABLE_WARNINGS_POP()
 #include <framework/vertexbuffer.h>
 #include <framework/vertexarray.h>
 #include <framework/texture.h>
-#include <iostream>
+
+#include <iostream> 
 #include <span>
 #include <vector>
 #include <memory> 
 
 bool cursorCircle = true;
 bool waterBrush = true;
+
+
 
 int main()
 {
@@ -40,11 +43,24 @@ int main()
     constexpr float aspect = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
     const glm::mat4 mainProjectionMatrix = glm::perspective(fov, aspect, 0.1f, 1000.0f);
     float aspectRatio = window.getAspectRatio();
+    window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
 
     std::cout << "aspectratio: " << aspectRatio << "\n";
 
     Circle cursorCircle(&window, glm::vec2(0.0f), 5, 4, 200); 
 
+    int octaves = 5;
+    double lucanarity = 2.1042;
+    double gain = 0.6;
+    std::vector<std::vector<double>> heightmap = generatePerlinNoise(WIDTH, HEIGHT, octaves, lucanarity, gain);  
+    // Normalize heightmap values to range [0, 1]
+    normalizeHeightmap(heightmap);  
+    //visualizeHeightmap(heightmap);   
+    //std::vector<float> createHeightmapVertices(const char* imagePath);
+    //std::vector<unsigned int> createHeightmapIndices(const char* imagePath);
+    //void drawHeightmap(const char* imagePath, std::vector<float> vertices, std::vector<unsigned int> indices);
+
+    // Create grid of cells
     Staggered_Grid x_velocity(WIDTH, HEIGHT, true);
     Staggered_Grid y_velocity(WIDTH, HEIGHT, false);
     std::vector<float> water_pressure(WIDTH * HEIGHT, 0.f);
@@ -54,9 +70,9 @@ int main()
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
             Grid.push_back(Cell(glm::vec2(i, j), 1));
+            Grid[i, j].m_height = heightmap[j][i];
         }
     }
-    
 
     // Key handle function
     window.registerKeyCallback([&](int key, int /* scancode */, int action, int /* mods */) {
