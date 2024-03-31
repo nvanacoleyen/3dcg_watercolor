@@ -16,7 +16,9 @@ else()
 endif()
 
 add_executable(Watercolor 
-        "src/main.cpp"    
+        "src/main.cpp"  
+	"src/camera.h"
+	"src/camera.cpp"  
         "src/cell.h" 
         "src/cell.cpp" 
         "src/circle.h" 

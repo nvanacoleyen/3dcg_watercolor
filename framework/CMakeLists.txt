@@ -31,7 +31,7 @@ else()
 		"src/vertexbuffer.cpp" 
 		"src/vertexarray.cpp"
 		"src/texture.cpp"
-		"src/SimplexNoise.cpp")
+		"src/SimplexNoise.cpp"  )
 	target_include_directories(CGFramework PRIVATE "include/framework/" PUBLIC "include/")
 	target_link_libraries(CGFramework PUBLIC OpenGL::GL glad glm glfw imgui stb tinyobjloader fmt nativefiledialog toml) 
 	target_compile_features(CGFramework PUBLIC cxx_std_20)
