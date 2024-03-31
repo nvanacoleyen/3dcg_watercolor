@@ -98,7 +98,6 @@ int main()
             Grid[i, j].m_height = heightmap[j][i];
         }
     }
-    
 
     // Key handle function
     window.registerKeyCallback([&](int key, int /* scancode */, int action, int /* mods */) {

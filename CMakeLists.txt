@@ -23,6 +23,8 @@ add_executable(Watercolor
         "src/circle.cpp" 
         "src/circle.h"
         "src/circle.cpp"
+	"src/heightmap.h"
+	"src/heightmap.cpp"
         "src/staggered_grid.h" 
         "src/staggered_grid.cpp" 
         "src/move_water.cpp" 
