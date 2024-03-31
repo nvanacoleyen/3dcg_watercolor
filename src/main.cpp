@@ -81,9 +81,11 @@ int main()
     // Normalize heightmap values to range [0, 1]
     normalizeHeightmap(heightmap);  
     //visualizeHeightmap(heightmap);   
-    //std::vector<float> createHeightmapVertices(const char* imagePath);
-    //std::vector<unsigned int> createHeightmapIndices(const char* imagePath);
-    //void drawHeightmap(const char* imagePath, std::vector<float> vertices, std::vector<unsigned int> indices);
+
+    std::string imagePath = "resources/heigtmap.png";
+    std::vector<float> verticesHeightmap = createHeightmapVertices(imagePath);
+    std::vector<unsigned int> indicesHeightmap = createHeightmapIndices(imagePath); 
+    drawHeightmap(imagePath, verticesHeightmap, indicesHeightmap);  
 
     // Create grid of cells
     Staggered_Grid x_velocity(WIDTH, HEIGHT, true);
@@ -112,10 +114,11 @@ int main()
         //};
     });
 
-    const Shader circleShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/circle_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/line_frag.glsl").build(); 
+    const Shader circleShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/circle_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/circle_frag.glsl").build(); 
     const Shader planeShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/plane_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/plane_frag.glsl").build();
+    const Shader diffuseShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/lambert_frag.glsl").build();
 
-    VertexBuffer vboPlane(verticesPlane, sizeof(verticesPlane)); 
+    VertexBuffer vboPlane(verticesPlane, sizeof(verticesPlane));  
     VertexBuffer iboPlane(indicesPlane, sizeof(indicesPlane));  
     VertexArray vaoPlane; 
     vaoPlane.Bind();

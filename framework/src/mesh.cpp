@@ -49,6 +49,17 @@ struct VertexHash {
     }
 };
 
+//std::vector<Mesh> createMesh(std::vector<float> vertices, std::vector<unsigned int> indices)
+//{
+//    Mesh mesh;
+//    std::unordered_map<uint32_t, uint32_t> vertexCache; // Map the index of a vertex as loaded by tinyobjloader to its index in the generated mesh
+//    for (size_t i = startTriangle * 3; i != endTriangle * 3; i += 3) {
+//        const glm::vec3 v0 = construct_vec3(&inAttrib.vertices[3 * shape.mesh.indices[i + 0].vertex_index]);
+//        const glm::vec3 v1 = construct_vec3(&inAttrib.vertices[3 * shape.mesh.indices[i + 1].vertex_index]);
+//        const glm::vec3 v2 = construct_vec3(&inAttrib.vertices[3 * shape.mesh.indices[i + 2].vertex_index]);
+//        const auto geometricNormal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
+//    }
+//}
 std::vector<Mesh> loadMesh(const std::filesystem::path& file, bool centerAndNormalize)
 {
     if (!std::filesystem::exists(file)) {
