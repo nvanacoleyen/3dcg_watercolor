@@ -1,10 +1,9 @@
 #include "heightmap.h"
-#include <vector> 
-#include <filesystem>
-#include <opencv2/opencv.hpp>  
+//#include <opencv2/opencv.hpp>  
 #include <framework/SimplexNoise.h> 
 #include <stb/stb_image.h>
 #include <framework/window.h>
+#include <framework/mesh.h>
 
 
 std::vector<std::vector<double>> generatePerlinNoise(int width, int height, int octaves, double lucanarity, double gain)
@@ -46,50 +45,51 @@ void normalizeHeightmap(std::vector<std::vector<double>>& heightmap) {
     }
 }
 
-// Function to visualize the heightmap using OpenCV
-void visualizeHeightmap(std::vector<std::vector<double>>& heightmap) 
-{
-    // Create an OpenCV Mat object to store the image
-    cv::Mat image(heightmap.size(), heightmap[0].size(), CV_8UC1);
+//// Function to visualize the heightmap using OpenCV
+//void visualizeHeightmap(std::vector<std::vector<double>>& heightmap) 
+//{
+//    // Create an OpenCV Mat object to store the image
+//    cv::Mat image(heightmap.size(), heightmap[0].size(), CV_8UC1);
+//
+//    // Iterate over each pixel in the heightmap
+//    for (int y = 0; y < heightmap.size(); ++y) {
+//        for (int x = 0; x < heightmap[y].size(); ++x) {
+//            // Convert the normalized height value to pixel intensity (0-255)
+//            int intensity = static_cast<int>(heightmap[y][x] * 255);
+//
+//            // Set the pixel value in the image
+//            image.at<uchar>(y, x) = intensity;
+//        }
+//    }
+//
+//    // Display the image using OpenCV
+//    cv::imshow("Heightmap", image);
+//
+//    // Save the image as a PNG file
+//    std::string filename = "resources/heightmap.png";
+//    bool success = cv::imwrite(filename, image);
+//
+//    // Check if the image writing was successful
+//    if (success) {
+//        std::cout << "Heightmap image saved successfully." << std::endl;
+//    }
+//    else {
+//        std::cerr << "Error: Failed to save heightmap image." << std::endl;
+//    }
+//
+//    cv::waitKey(0);
+//}
 
-    // Iterate over each pixel in the heightmap
-    for (int y = 0; y < heightmap.size(); ++y) {
-        for (int x = 0; x < heightmap[y].size(); ++x) {
-            // Convert the normalized height value to pixel intensity (0-255)
-            int intensity = static_cast<int>(heightmap[y][x] * 255);
-
-            // Set the pixel value in the image
-            image.at<uchar>(y, x) = intensity;
-        }
-    }
-
-    // Display the image using OpenCV
-    cv::imshow("Heightmap", image);
-
-    // Save the image as a PNG file
-    std::string filename = "resources/heightmap.png";
-    bool success = cv::imwrite(filename, image);
-
-    // Check if the image writing was successful
-    if (success) {
-        std::cout << "Heightmap image saved successfully." << std::endl;
-    }
-    else {
-        std::cerr << "Error: Failed to save heightmap image." << std::endl;
-    }
-
-    cv::waitKey(0);
-}
-
-std::vector<float> createHeightmapVertices(const char* imagePath)
+std::vector<float> createHeightmapVertices(std::string& imagePath)
 {
     std::vector<float> vertices;
 
     // load height map texture
     int width, height, nChannels;
-    unsigned char* data = stbi_load(imagePath,
-        &width, &height, &nChannels,
-        0); 
+    unsigned char* data = stbi_load(imagePath.c_str(),
+        &width, &height, &nChannels, 0); 
+    if (stbi_failure_reason())
+        std::cout << stbi_failure_reason();
 
     for (unsigned int i = 0; i < height; i++)
     {
@@ -106,12 +106,14 @@ std::vector<float> createHeightmapVertices(const char* imagePath)
     return vertices;
 }
 
-std::vector<unsigned int> createHeightmapIndices(const char* imagePath)
+std::vector<unsigned int> createHeightmapIndices(std::string& imagePath)
 {
     int width, height, nChannels;
-    unsigned char* data = stbi_load(imagePath,
-        &width, &height, &nChannels,
-        0);
+    unsigned char* data = stbi_load(imagePath.c_str(),
+        &width, &height, &nChannels, 0);
+
+    if (stbi_failure_reason()) 
+        std::cout << stbi_failure_reason(); 
 
     // index generation
     std::vector<unsigned int> indices;
@@ -129,10 +131,15 @@ std::vector<unsigned int> createHeightmapIndices(const char* imagePath)
     return indices;
 }
 
-void drawHeightmap(const char* imagePath, std::vector<float> vertices, std::vector<unsigned int> indices)
+//void createMesh(std::vector<float> vertices, std::vector<unsigned int> indices)
+//{
+//
+//}
+
+void drawHeightmap(std::string& imagePath, std::vector<float> vertices, std::vector<unsigned int> indices)
 {
     int width, height, nChannels;
-    unsigned char* data = stbi_load(imagePath,
+    unsigned char* data = stbi_load(imagePath.c_str(),
         &width, &height, &nChannels,
         0);
 
@@ -150,6 +157,11 @@ void drawHeightmap(const char* imagePath, std::vector<float> vertices, std::vect
         vertices.size() * sizeof(float),       // size of vertices buffer
         &vertices[0],                          // pointer to first element
         GL_STATIC_DRAW);
+
+    glVertexArrayVertexBuffer(terrainVAO, 0, terrainVBO, offsetof(Vertex, position), sizeof(Vertex));
+    glVertexArrayVertexBuffer(terrainVAO, 1, terrainVBO, offsetof(Vertex, normal), sizeof(Vertex));
+    glEnableVertexArrayAttrib(terrainVAO, 0);
+    glEnableVertexArrayAttrib(terrainVAO, 1);
 
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
@@ -170,9 +182,15 @@ void drawHeightmap(const char* imagePath, std::vector<float> vertices, std::vect
         glDrawElements(GL_TRIANGLE_STRIP,   // primitive type
             NUM_VERTS_PER_STRIP, // number of indices to render
             GL_UNSIGNED_INT,     // index data type
-            (void*)(sizeof(unsigned int)
-                * NUM_VERTS_PER_STRIP
-                * strip)); // offset to starting index 
+            (void*)(sizeof(unsigned int) * NUM_VERTS_PER_STRIP * strip)); // offset to starting index 
     }
 
+    //VertexBuffer vboPlane(verticesPlane, sizeof(verticesPlane));
+    //VertexBuffer iboPlane(indicesPlane, sizeof(indicesPlane));
+    //VertexArray vaoPlane;
+    //vaoPlane.Bind();
+    //vaoPlane.AddIndices(vaoPlane, iboPlane);
+    //vaoPlane.AddBuffer(vboPlane, 0, 3, GL_FLOAT, 5 * sizeof(float), (void*)0); // Add positions attribute
+    //vaoPlane.AddBuffer(vboPlane, 1, 2, GL_FLOAT, 5 * sizeof(float), (void*)(3 * sizeof(float))); // add texture attribute  
+    //vaoPlane.Unbind();
 }

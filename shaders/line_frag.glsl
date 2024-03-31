@@ -1,9 +1,16 @@
 #version 450 core
 
-layout(location = 2) uniform vec3 color;
+// Global variables for lighting calculations.
+layout(location = 1) uniform vec3 viewPos;
 
-out vec4 FragColor;
+// Output for on-screen color.
+layout(location = 0) out vec4 outColor;
 
-void main() {
-    FragColor = vec4(color, 1.0); // Red color for the line
+// Interpolated output data from vertex shader.
+in vec3 fragPos;
+in vec3 fragNormal;
+
+void main()
+{
+    outColor = vec4(abs(fragNormal), 1.0);
 }
