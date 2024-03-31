@@ -32,7 +32,7 @@ DISABLE_WARNINGS_POP()
 
 bool cursorCircle = true;
 bool waterBrush = true;
-
+bool calculate_watercolour = false;
 
 
 int main()
@@ -85,6 +85,9 @@ int main()
         case GLFW_KEY_B:
             waterBrush = !waterBrush;
             break;
+        case GLFW_KEY_ENTER:
+            calculate_watercolour= !calculate_watercolour;
+            break;
         default:
             break;
         };
@@ -130,14 +133,18 @@ int main()
         }
         
  
+        /* You toggle these by pressing enter. */
+        if (calculate_watercolour) {
+            /* Move water functions. */
+            UpdateVelocities(&Grid, &x_velocity, &y_velocity, &water_pressure);
+            RelaxDivergence(&x_velocity, &y_velocity, &water_pressure);
+            /* Here we would do flow outward if we are implementing that function */
 
-        /* Move water functions. */
-        UpdateVelocities(&Grid, &x_velocity, &y_velocity, &water_pressure);
-        RelaxDivergence(&x_velocity, &y_velocity, &water_pressure);
-        /* Here we would do flow outward if we are implementing that function */
+            /* Pigment functions */
+            movePigment(&Grid, &x_velocity, &y_velocity);
+        }
 
-        /* Pigment functions */
-        movePigment(&Grid, &x_velocity, &y_velocity);
+        
 
 
         const glm::mat4 mvp = mainProjectionMatrix * camera.viewMatrix();
