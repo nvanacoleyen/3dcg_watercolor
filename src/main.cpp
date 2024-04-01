@@ -59,7 +59,7 @@ void updateColors(std::vector<float>& vertices, std::vector<Cell>& Grid, glm::ve
             color = glm::vec3(0.5 - (0.5 * pigment_factor), 0.5 - (0.5 * pigment_factor), 0.5 + (0.5 * pigment_factor));
         }
         else {
-            color = glm::vec3(1.0, 0.95, 0.9);
+            color = glm::vec3(1.0);
         }
         for (size_t k = 0; k < 4; k++)
         {
@@ -97,7 +97,7 @@ void updateColors(std::vector<float>& vertices, std::vector<Cell>& Grid, float& 
             color = glm::vec3(0.5 - (0.5 * pigment_factor), 0.5 - (0.5 * pigment_factor), 0.5 + (0.5 * pigment_factor));
         }
         else {
-            color = glm::vec3(1.0, 0.95, 0.9);
+            color = glm::vec3(1.0);
         }
         for (size_t k = 0; k < 4; k++)
         {
@@ -164,7 +164,7 @@ int main()
             color = glm::vec3(0.5 - (0.5 * pigment_factor), 0.5 - (0.5 * pigment_factor), 0.5 + (0.5 * pigment_factor));
         }
         else {
-            color = glm::vec3(1.0, 0.95, 0.9);
+            color = glm::vec3(1.0);
         } // Create terrain vertices
         vertices.insert(vertices.end(), {
             verticesTerrain[i].position.x,      verticesTerrain[i].position.z,      verticesTerrain[i].position.y,
