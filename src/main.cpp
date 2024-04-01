@@ -297,8 +297,7 @@ int main()
             /* Pigment functions */
             movePigment(&Grid, &x_velocity, &y_velocity);
             updateColors(vertices, Grid, brush_radius, VBO);   
-        }
-        if (isDragging) {
+        } else if (isDragging) {
             glm::vec2 cursorPosition = window.getCursorPos() / window.getDpiScalingFactor();
             updateColors(vertices, Grid, cursorPosition, brush_radius, VBO);
         }
