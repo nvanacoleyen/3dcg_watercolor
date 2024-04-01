@@ -42,6 +42,45 @@ std::vector lights{ Light { glm::vec3(0, 0, 3), glm::vec3(1) } };
 bool calculate_watercolour = false;
 float brush_radius = 7;
 
+void updateColors(std::vector<float>& vertices, std::vector<Cell>& Grid, glm::vec2 cursorPos, float& brush_radius, GLuint& VBO)
+{
+    glm::vec3 color;
+    // Color with/without water/pigment concentration
+
+    for (size_t i = 0; i < vertices.size(); i += 36)
+    {   // For every vertex in the square:
+        if (Grid[i / 36].m_waterConc == 1 && Grid[i / 36].m_pigmentConc == 0) {
+            color = glm::vec3(0.5);
+        }
+        else if (Grid[i / 36].m_pigmentConc != 0) {
+            color = glm::vec3(Grid[i / 36].m_pigmentConc, 0, 0);
+        }
+        else {
+            color = glm::vec3(1.0, 0.95, 0.9);
+        }
+        for (size_t k = 0; k < 4; k++)
+        {
+            // Extract vertex position from buffer
+            glm::vec2 vertexPos = glm::vec2(vertices[i + k * 9], vertices[i + k * 9 + 1]);
+
+            // Calculate distance between cursor position and vertex position
+            float distance = glm::distance(cursorPos, vertexPos);
+
+            // If the vertex is close to the cursor position, update its color
+            if (distance < brush_radius) {
+                // Update color attribute of the vertex
+                vertices[i + k * 9 + 6] = color.r;
+                vertices[i + k * 9 + 7] = color.g;
+                vertices[i + k * 9 + 8] = color.b;
+            }
+        }
+    }
+    // Update the buffer data 
+    glBindBuffer(GL_ARRAY_BUFFER, VBO); 
+    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float), vertices.data());
+}
+
+
 int main()
 {
     Window window{ "Watercolor", glm::ivec2(WIDTH, HEIGHT), OpenGLVersion::GL45 };
@@ -85,7 +124,7 @@ int main()
         glm::vec3 color;
         // Color with/without water/pigment concentration
         if (Grid[i].m_waterConc == 1 && Grid[i].m_pigmentConc == 0) {
-            color = normalize(glm::vec3(191, 64, 191));
+            color = normalize(glm::vec3(0.3));
         }
         else if (Grid[i].m_pigmentConc != 0) {
             color = glm::vec3(Grid[i].m_pigmentConc, 0, 0);
@@ -155,26 +194,7 @@ int main()
 
     });
 
-    window.registerMouseMoveCallback([&](const glm::vec2& cursorPos) {
-        if (isDragging) {
-            for (int j = cursorPos.y - brush_radius; j <= cursorPos.y + brush_radius; j++) {
-                for (int i = cursorPos.x - brush_radius; i <= cursorPos.x + brush_radius; i++) {
-                    if (j < 600 && i < 800 && j >= 0 && i >= 0) {
-                        float dist = sqrt(pow(i - cursorPos.x, 2) + pow(j - cursorPos.y, 2));
-                        if (dist <= brush_radius) {
-                            if (waterBrush) {
-                                Grid[WIDTH * j + i].m_waterConc = 1;
-                                Grid[WIDTH * j + i].is_wet = true;
-                            }
-                            else {
-                                Grid[WIDTH * j + i].m_pigmentConc = 0.5;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    });
+
 
     /* SHADERS */
     const Shader paperShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/paper_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/paper_frag.glsl").build();
@@ -199,6 +219,31 @@ int main()
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
+    glm::vec2 cursorPosition = window.getCursorPos() / window.getDpiScalingFactor();
+
+    window.registerMouseMoveCallback([&](const glm::vec2& cursorPos) {   
+        glm::vec2 cursorPosition = window.getCursorPos() / window.getDpiScalingFactor(); 
+        if (isDragging) {
+            for (int j = cursorPosition.y - brush_radius; j <= cursorPosition.y + brush_radius; j++) {
+                for (int i = cursorPosition.x - brush_radius; i <= cursorPosition.x + brush_radius; i++) {
+                    if (j < 600 && i < 800 && j >= 0 && i >= 0) {
+                        float dist = sqrt(pow(i - cursorPosition.x, 2) + pow(j - cursorPosition.y, 2));
+                        if (dist <= brush_radius) {
+                            if (waterBrush) {
+                                Grid[WIDTH * j + i].m_waterConc = 1;
+                                Grid[WIDTH * j + i].is_wet = true;
+                            }
+                            else {
+                                Grid[WIDTH * j + i].m_pigmentConc = 0.5;
+                            }
+                        }
+                    }
+                }
+            }
+            updateColors(vertices, Grid, cursorPosition, brush_radius, VBO);
+        }
+    }); 
+
 
     // Main loop
     while (!window.shouldClose()) {
@@ -210,36 +255,8 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // Enable color writes. 
         
-        glm::vec2 cursorPos = window.getCursorPos() / window.getDpiScalingFactor();
-
-        if (isDragging == true) {
-            // For every square in the terrain:
-            for (size_t i = 0; i < vertices.size(); i += 36)
-            {   // For every vertex in the square:
-                for (size_t k = 0; k < 4; k++)
-                {
-                    // Extract vertex position from buffer
-                    glm::vec2 vertexPos = glm::vec2(vertices[i + k * 9], vertices[i + k * 9 + 1]);
-
-                    // Calculate distance between cursor position and vertex position
-                    float distance = glm::distance(cursorPos, vertexPos);
-
-                    // If the vertex is close to the cursor position, update its color
-                    if (distance < 20) {
-                        // Update color attribute of the vertex
-                        vertices[i + k * 9 + 6] = 0.93;
-                        vertices[i + k * 9 + 7] = 0.05; 
-                        vertices[i + k * 9 + 8] = 0.8;
-                    }
-                }
-            }
-            // Update the buffer data 
-            glBindBuffer(GL_ARRAY_BUFFER, VBO); 
-            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float), vertices.data()); 
-        }
         
 
- 
         /* You toggle these by pressing enter. */
         if (calculate_watercolour) {
             /* Move water functions. */
@@ -249,6 +266,7 @@ int main()
 
             /* Pigment functions */
             movePigment(&Grid, &x_velocity, &y_velocity);
+            updateColors(vertices, Grid, cursorPosition, brush_radius, VBO);   
         }
 
         const glm::mat4 mvp = mainProjectionMatrix * camera.viewMatrix();
