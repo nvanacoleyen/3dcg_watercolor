@@ -9,46 +9,46 @@ float grid_halfway_point(std::vector<float> grid, int gridWidth, int gridLength,
 
 	/* if both x and y are midway points we use this one. */
 	if ((x_pos != floor(x_pos)) && (x_pos != floor(x_pos))) {
-		sum += get_from_grid(grid, gridWidth, gridLength, floor(x_pos), floor(y_pos));
-		sum += get_from_grid(grid, gridWidth, gridLength, ceil(x_pos), floor(y_pos));
-		sum += get_from_grid(grid, gridWidth, gridLength, floor(x_pos), ceil(y_pos));
-		sum += get_from_grid(grid, gridWidth, gridLength, ceil(x_pos), ceil(y_pos));
+		sum += get_from_grid(&grid, gridWidth, gridLength, floor(x_pos), floor(y_pos));
+		sum += get_from_grid(&grid, gridWidth, gridLength, ceil(x_pos), floor(y_pos));
+		sum += get_from_grid(&grid, gridWidth, gridLength, floor(x_pos), ceil(y_pos));
+		sum += get_from_grid(&grid, gridWidth, gridLength, ceil(x_pos), ceil(y_pos));
 
 		num_points = 4;
 	}
 
 	/* If just x is a midpoint we use this  */
 	else if (x_pos != floor(x_pos)) {
-		sum += get_from_grid(grid, gridWidth, gridLength, floor(x_pos), y_pos);
-		sum += get_from_grid(grid, gridWidth, gridLength, ceil(x_pos), y_pos);
+		sum += get_from_grid(&grid, gridWidth, gridLength, floor(x_pos), y_pos);
+		sum += get_from_grid(&grid, gridWidth, gridLength, ceil(x_pos), y_pos);
 		num_points = 2;
 	}
 
 	/* If just y is a midpoint we use this */
 	else if (y_pos != floor(y_pos)) {
-		sum += get_from_grid(grid, gridWidth, gridLength, floor(x_pos), floor(y_pos));
-		sum += get_from_grid(grid, gridWidth, gridLength, x_pos, ceil(y_pos));
+		sum += get_from_grid(&grid, gridWidth, gridLength, floor(x_pos), floor(y_pos));
+		sum += get_from_grid(&grid, gridWidth, gridLength, x_pos, ceil(y_pos));
 		num_points = 2;
 	}
 
 	/* Final scenario, there is no midpoint and this is good. */
 	else {
-		sum = get_from_grid(grid, gridWidth, gridLength, x_pos, y_pos);
+		sum = get_from_grid(&grid, gridWidth, gridLength, x_pos, y_pos);
 		num_points = 1;
 	}
 
 	return sum / num_points;
 }
 
-float get_from_grid(std::vector<float> grid, int grid_width, int grid_height, int x_pos, int y_pos)
+float get_from_grid(std::vector<float>* grid, int grid_width, int grid_height, int x_pos, int y_pos)
 {
 	/* If the x or y positions are out of bounds of the grid, the velocities will just be 0 for that position. */
-	if ((x_pos < 0) || (x_pos > grid_width)) { return 0; }
-	if ((y_pos < 0) || (y_pos > grid_height)) { return 0; }
+	if ((x_pos < 0) || (x_pos > grid_width - 1)) { return 0; }
+	if ((y_pos < 0) || (y_pos > grid_height - 1)) { return 0; }
 
 	int grid_position = grid_width * y_pos + x_pos;
 
-	return grid.at(grid_position);
+	return grid->at(grid_position);
 }
 
 /** 
@@ -64,13 +64,13 @@ Staggered_Grid::Staggered_Grid(int width, int height, bool x_axis):
 	/* If we use the x axis, the width is increased by 1 as we use the vertices. Use height + 1 otherwise for the same reason. */
 	if (x_axis) {
 		data_values = std::vector((width + 1) * (height), 0.f);
-		width = width + 1;
-		height = height;
+		this->width = width + 1;
+		this->height = height;
 	}
 	else {
 		data_values = std::vector((width) * (height + 1), 0.f);
-		width = width;
-		height = height + 1;
+		this->width = width;
+		this->height = height + 1;
 	}
 }
 
@@ -114,29 +114,29 @@ float Staggered_Grid::get_at_pos(float x, float y)
 			/* If both are borders then we must get the average of the two (?) */
 			if (is_y_border) {
 				/* Here, both x and y are borders. This is a bit strange because it is unclear what to do if Y is a border, but we will just take the centre point between the two. */
-				float val1 = get_from_grid(data_values, width, height, ceil(x), ceil(y));
-				float val2 = get_from_grid(data_values, width, height, ceil(x), ceil(y) + 1);
+				float val1 = get_from_grid(&data_values, width, height, ceil(x), ceil(y));
+				float val2 = get_from_grid(&data_values, width, height, ceil(x), ceil(y) + 1);
 				return (val1 + val2) / 2;
 			}
 			else {
-				return get_from_grid(data_values, width, height, ceil(x), y); // data_values.at(ceil(x) + (y * width));
+				return get_from_grid(&data_values, width, height, ceil(x), y); // data_values.at(ceil(x) + (y * width));
 			}
 		}
 		else {
 			if (is_y_border) {
 				/* If it is the centre of an X position and the Y is in between, I think we just take the centres of the other two? It is unclear what to do here. */
-				float val1 = get_from_grid(data_values, width, height, ceil(x), ceil(y));
-				float val2 = get_from_grid(data_values, width, height, ceil(x), ceil(y) + 1);
+				float val1 = get_from_grid(&data_values, width, height, ceil(x), ceil(y));
+				float val2 = get_from_grid(&data_values, width, height, ceil(x), ceil(y) + 1);
 
-				float val3 = get_from_grid(data_values, width, height, ceil(x) + 1, ceil(y));
-				float val4 = get_from_grid(data_values, width, height, ceil(x) + 1, ceil(y) + 1);
+				float val3 = get_from_grid(&data_values, width, height, ceil(x) + 1, ceil(y));
+				float val4 = get_from_grid(&data_values, width, height, ceil(x) + 1, ceil(y) + 1);
 
 				return (val1 + val2 + val3 + val4) / 4;
 			}
 			/* Otherwise it is a centre */
 			else {
-				float val1 = get_from_grid(data_values, width, height, ceil(x), y);
-				float val2 = get_from_grid(data_values, width, height, ceil(x) + 1, y);
+				float val1 = get_from_grid(&data_values, width, height, ceil(x), y);
+				float val2 = get_from_grid(&data_values, width, height, ceil(x) + 1, y);
 				return (val1 + val2) / 2;
 			}
 
@@ -149,29 +149,29 @@ float Staggered_Grid::get_at_pos(float x, float y)
 			/* If both are borders then we must get the average of the two (?) */
 			if (is_x_border) {
 				/* Here, both x and y are borders. Doing the same as with the X side, but switched around. */
-				float val1 = get_from_grid(data_values, width, height, ceil(x),     ceil(y));
-				float val2 = get_from_grid(data_values, width, height, ceil(x) + 1, ceil(y));
+				float val1 = get_from_grid(&data_values, width, height, ceil(x),     ceil(y));
+				float val2 = get_from_grid(&data_values, width, height, ceil(x) + 1, ceil(y));
 				return (val1 + val2) / 2;
 			}
 			else {
-				return get_from_grid(data_values, width, height, x, ceil(y)); // data_values.at(ceil(x) + (y * width));
+				return get_from_grid(&data_values, width, height, x, ceil(y)); // data_values.at(ceil(x) + (y * width));
 			}
 		}
 		else {
 			if (is_x_border) {
 				/* X is border, Y is not. This means we get the centre position for Y and the combination of both corners for X. */
-				float val1 = get_from_grid(data_values, width, height, ceil(x), ceil(y));
-				float val2 = get_from_grid(data_values, width, height, ceil(x), ceil(y) + 1);
+				float val1 = get_from_grid(&data_values, width, height, ceil(x), ceil(y));
+				float val2 = get_from_grid(&data_values, width, height, ceil(x), ceil(y) + 1);
 
-				float val3 = get_from_grid(data_values, width, height, ceil(x) + 1, ceil(y));
-				float val4 = get_from_grid(data_values, width, height, ceil(x) + 1, ceil(y) + 1);
+				float val3 = get_from_grid(&data_values, width, height, ceil(x) + 1, ceil(y));
+				float val4 = get_from_grid(&data_values, width, height, ceil(x) + 1, ceil(y) + 1);
 
 				return (val1 + val2 + val3 + val4) / 4;
 			}
 			/* Otherwise it is a centre */
 			else {
-				float val1 = get_from_grid(data_values, width, height, x, ceil(y));
-				float val2 = get_from_grid(data_values, width, height, x, ceil(y) + 1);
+				float val1 = get_from_grid(&data_values, width, height, x, ceil(y));
+				float val2 = get_from_grid(&data_values, width, height, x, ceil(y) + 1);
 				return (val1 + val2) / 2;
 			}
 
@@ -200,6 +200,15 @@ void Staggered_Grid::zero_at_pos(int x, int y)
 		data_values.at(y * width + x) = 0.f;
 		data_values.at((y + 1) * width + x) = 0.f;
 	}
+}
+
+
+void Staggered_Grid::change_at_pos_by(int x, int y, float delta)
+{
+	/* If out of bounds, do nothing. */
+	if (x < 0 || x > width || y < 0 || y > height) { return; }
+	data_values.at(y * width + x) += delta;
+
 }
 
 float Staggered_Grid::max_value()

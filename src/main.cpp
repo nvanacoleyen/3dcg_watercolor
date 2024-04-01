@@ -32,6 +32,7 @@ DISABLE_WARNINGS_POP()
 
 bool cursorCircle = true;
 bool waterBrush = true;
+bool calculate_watercolour = false;
 
 struct Light {
     glm::vec3 position;
@@ -71,7 +72,7 @@ int main()
     std::vector<Cell> Grid;
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
-            Grid.push_back(Cell(glm::vec3(i, j, heightmap[j][i] * 100), 1));
+            Grid.push_back(Cell(glm::vec2(i, j), 1));
             Grid[i, j].m_height = heightmap[j][i];
         }
     }
@@ -124,12 +125,24 @@ int main()
         case GLFW_KEY_B:
             waterBrush = !waterBrush;
             break;
+        case GLFW_KEY_ENTER:
+            calculate_watercolour= !calculate_watercolour;
+            break;
+        case GLFW_KEY_LEFT:
+            if (cursorCircle.m_radius > 0) {
+                cursorCircle.m_radius -= 1;
+            }
+            break;
+        case GLFW_KEY_RIGHT:
+            if (cursorCircle.m_radius < 20) {
+                cursorCircle.m_radius += 1;
+            }
+            break;
         default:
             break;
         };
     });
 
-    /* SHADERS */
     const Shader circleShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/circle_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/circle_frag.glsl").build(); 
     const Shader paperShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/paper_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/paper_frag.glsl").build();
     const Shader terrainShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/lambert_frag.glsl").build();
@@ -154,11 +167,11 @@ int main()
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
-    VertexBuffer vboCircle(cursorCircle.vertices.data(), sizeof(float) * cursorCircle.vertices.size()); 
-    VertexArray vaoCircle; 
-    vaoCircle.Bind(); 
-    vaoCircle.AddBuffer(vboCircle, 0, 3, GL_FLOAT, 3 * sizeof(float)); 
-    vaoCircle.Unbind();  
+    VertexBuffer vboCircle(cursorCircle.vertices.data(), sizeof(float) * cursorCircle.vertices.size());
+    VertexArray vaoCircle;
+    vaoCircle.Bind();
+    vaoCircle.AddBuffer(vboCircle, 0, 3, GL_FLOAT, 3 * sizeof(float));
+    vaoCircle.Unbind(); 
 
     // Enable depth testing.
     glEnable(GL_DEPTH_TEST); 
@@ -167,15 +180,14 @@ int main()
     while (!window.shouldClose()) {
         window.updateInput();
         camera.updateInput();
-        glm::vec3 cursorPos(window.getCursorPos(), 100.0f);
+        glm::vec2 cursorPos = window.getCursorPos();
         //cursorPos = (cursorPos - glm::vec2(window.getWindowSize()) * 0.5f) / (glm::vec2(window.getWindowSize()) * 0.5f);
 
-        cursorCircle.updateCenter(cursorPos);
+        //cursorCircle.updateCenter(cursorPos);
 
         //glViewport(0, 0, window.getWindowSize().x, window.getWindowSize().y);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // Enable color writes. 
 
         // If LMB clicked -> m_pigmentConc of every cell within radius is 1.0
         if (window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT)) {
@@ -190,14 +202,15 @@ int main()
                 }
             }
         }
+        
+ 
 
         /* Move water functions. */
         //UpdateVelocities(Grid, &x_velocity, &y_velocity, water_pressure);
         //RelaxDivergence(&x_velocity, &y_velocity, water_pressure);
         /* Here we would do flow outward if we are implementing that function */
+        /* Here we would do flow outward if we are implementing that function */
 
-        /* Pigment functions */
-        //movePigment(Grid, &x_velocity, &y_velocity);
         const glm::mat4 mvp = mainProjectionMatrix * camera.viewMatrix();
 
         paperShader.bind();

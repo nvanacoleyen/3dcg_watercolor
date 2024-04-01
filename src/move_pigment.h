@@ -8,6 +8,6 @@
 #include <vector>
 
 
-void movePigment(std::vector<Cell> Grid, Staggered_Grid* u, Staggered_Grid* v);
+void movePigment(std::vector<Cell>* Grid, Staggered_Grid* u, Staggered_Grid* v);
 
 #endif // !MOVE_PIGMENT_H
