@@ -1,5 +1,4 @@
 #include "cell.h"
-#include "circle.h"
 #include "heightmap.h"
 #include "staggered_grid.h"
 #include "global_constants.h"
@@ -41,6 +40,7 @@ struct Light {
 std::vector lights{ Light { glm::vec3(0, 0, 3), glm::vec3(1) } };
 
 bool calculate_watercolour = false;
+float brush_radius = 7;
 
 
 int main()
@@ -53,7 +53,6 @@ int main()
     float aspectRatio = window.getAspectRatio();
     window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
 
-    Circle cursorCircle(&window, glm::vec3(0.0f), 200, 20, 200); 
 
     /* GENERATE HEIGHTMAP */
     int octaves = 5;
@@ -77,7 +76,6 @@ int main()
         for (int i = 0; i < WIDTH; i++) {
             Grid.push_back(Cell(glm::vec3(i, j, heightmap[j][i] * 100), 1)); 
             Grid[WIDTH * j + i].m_height = heightmap[j][i];
-            //Grid.push_back(Cell(glm::vec2(i, j), 1, heightmap[j][i]));
         }
     }
 
@@ -133,13 +131,13 @@ int main()
             calculate_watercolour = !calculate_watercolour;
             break;
         case GLFW_KEY_LEFT:
-            if (cursorCircle.m_radius > 0) {
-                cursorCircle.m_radius -= 1;
+            if (brush_radius > 0) {
+                brush_radius -= 1;
             }
             break;
         case GLFW_KEY_RIGHT:
-            if (cursorCircle.m_radius < 20) {
-                cursorCircle.m_radius += 1;
+            if (brush_radius < 20) {
+                brush_radius += 1;
             }
             break;
         default:
@@ -164,16 +162,18 @@ int main()
 
     window.registerMouseMoveCallback([&](const glm::vec2& cursorPos) {
         if (isDragging) {
-            for (int j = cursorPos.y - cursorCircle.m_radius; j <= cursorPos.y + cursorCircle.m_radius; j++) {
-                for (int i = cursorPos.x - cursorCircle.m_radius; i <= cursorPos.x + cursorCircle.m_radius; i++) {
-                    float dist = sqrt(pow(i - cursorPos.x, 2) + pow(j - cursorPos.y, 2));
-                    if (dist <= cursorCircle.m_radius) {
-                        if (waterBrush) {
-                            Grid[WIDTH * j + i].m_waterConc = 1;
-                            Grid[WIDTH * j + i].is_wet = true;
-                        }
-                        else {
-                            Grid[WIDTH * j + i].m_pigmentConc = 0.5;
+            for (int j = cursorPos.y - brush_radius; j <= cursorPos.y + brush_radius; j++) {
+                for (int i = cursorPos.x - brush_radius; i <= cursorPos.x + brush_radius; i++) {
+                    if (j < 600 && i < 800 && j >= 0 && i >= 0) {
+                        float dist = sqrt(pow(i - cursorPos.x, 2) + pow(j - cursorPos.y, 2));
+                        if (dist <= brush_radius) {
+                            if (waterBrush) {
+                                Grid[WIDTH * j + i].m_waterConc = 1;
+                                Grid[WIDTH * j + i].is_wet = true;
+                            }
+                            else {
+                                Grid[WIDTH * j + i].m_pigmentConc = 0.5;
+                            }
                         }
                     }
                 }
