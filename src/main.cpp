@@ -33,7 +33,11 @@ DISABLE_WARNINGS_POP()
 bool cursorCircle = true;
 bool waterBrush = true;
 
-
+struct Light {
+    glm::vec3 position;
+    glm::vec3 color;
+};
+std::vector lights{ Light { glm::vec3(0, 0, 3), glm::vec3(1) } };
 
 int main()
 {
@@ -45,33 +49,68 @@ int main()
     float aspectRatio = window.getAspectRatio();
     window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
 
-    std::cout << "aspectratio: " << aspectRatio << "\n";
+    Circle cursorCircle(&window, glm::vec3(0.0f), 200, 20, 200); 
 
-    Circle cursorCircle(&window, glm::vec2(0.0f), 5, 4, 200); 
-
+    /* GENERATE HEIGHTMAP */
     int octaves = 5;
     double lucanarity = 2.1042;
-    double gain = 0.6;
+    double gain = 3.0;
     std::vector<std::vector<double>> heightmap = generatePerlinNoise(WIDTH, HEIGHT, octaves, lucanarity, gain);  
     // Normalize heightmap values to range [0, 1]
     normalizeHeightmap(heightmap);  
-    //visualizeHeightmap(heightmap);   
-    //std::vector<float> createHeightmapVertices(const char* imagePath);
-    //std::vector<unsigned int> createHeightmapIndices(const char* imagePath);
-    //void drawHeightmap(const char* imagePath, std::vector<float> vertices, std::vector<unsigned int> indices);
+    // Create heightmap vertices, indices and normals
+    std::vector<VertexColor> verticesTerrain = createHeightmapVertices(heightmap);   
+    std::vector<unsigned int> indicesTerrain = createHeightmapIndices(heightmap);   
+    createNormals(heightmap, verticesTerrain, indicesTerrain); 
 
-    // Create grid of cells
-    Staggered_Grid x_velocity(WIDTH, HEIGHT, true);
+    /* GENERATE GRID OF CELLS */
+    Staggered_Grid x_velocity(WIDTH, HEIGHT, true); 
     Staggered_Grid y_velocity(WIDTH, HEIGHT, false);
     std::vector<float> water_pressure(WIDTH * HEIGHT, 0.f);
-
     // Create grid of cells
     std::vector<Cell> Grid;
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
-            Grid.push_back(Cell(glm::vec2(i, j), 1));
+            Grid.push_back(Cell(glm::vec3(i, j, heightmap[j][i] * 100), 1));
             Grid[i, j].m_height = heightmap[j][i];
         }
+    }
+
+    /* RENDER GRID */
+    std::vector<float> vertices;
+    for (int i = 0; i < Grid.size(); i++) 
+    {
+        glm::vec3 color;
+        // Color with/without water/pigment concentration
+        if (Grid[i].m_waterConc == 1 && Grid[i].m_pigmentConc == 0) {
+            color = normalize(glm::vec3(191, 64, 191));
+        }
+        else if (Grid[i].m_pigmentConc != 0) {
+            color = glm::vec3(Grid[i].m_pigmentConc, 0, 0);
+        }
+        else {
+            color = normalize(glm::vec3(255, 240, 219));
+        } // Create terrain vertices
+        vertices.insert(vertices.end(), {
+            verticesTerrain[i].position.x,      verticesTerrain[i].position.z,      verticesTerrain[i].position.y,
+            verticesTerrain[i].normal.x,        verticesTerrain[i].normal.z,        verticesTerrain[i].normal.y,
+            color.r,                            color.g,                            color.b,
+            verticesTerrain[i].position.x + 1,  verticesTerrain[i].position.z,      verticesTerrain[i].position.y,
+            verticesTerrain[i].normal.x + 1,    verticesTerrain[i].normal.z,        verticesTerrain[i].normal.y,
+            color.r,                            color.g,                            color.b,
+            verticesTerrain[i].position.x,      verticesTerrain[i].position.z + 1,  verticesTerrain[i].position.y,
+            verticesTerrain[i].normal.x,        verticesTerrain[i].normal.z + 1,    verticesTerrain[i].normal.y,
+            color.r,                            color.g,                            color.b,
+            verticesTerrain[i].position.x + 1,  verticesTerrain[i].position.z + 1,  verticesTerrain[i].position.y,
+            verticesTerrain[i].normal.x + 1,    verticesTerrain[i].normal.z + 1,    verticesTerrain[i].normal.y,
+            color.r,                            color.g,                            color.b
+            });
+        //vertices.insert(vertices.end(), {
+        //    cell.m_position.x,      cell.m_position.y,      cell.m_position.z, color.r, color.g, color.b,
+        //    cell.m_position.x + 1,  cell.m_position.y,      cell.m_position.z, color.r, color.g, color.b,
+        //    cell.m_position.x,      cell.m_position.y + 1,  cell.m_position.z, color.r, color.g, color.b, 
+        //    cell.m_position.x + 1,  cell.m_position.y + 1,  cell.m_position.z, color.r, color.g, color.b
+        //    });
     }
 
     // Key handle function
@@ -90,23 +129,45 @@ int main()
         };
     });
 
+    /* SHADERS */
     const Shader circleShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/circle_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/circle_frag.glsl").build(); 
     const Shader paperShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/paper_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/paper_frag.glsl").build();
-    
-    // Enable depth testing.
-    glEnable(GL_DEPTH_TEST);  
+    const Shader terrainShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/lambert_frag.glsl").build();
 
-    VertexBuffer vboCircle(cursorCircle.vertices.data(), sizeof(float) * cursorCircle.vertices.size());
-    VertexArray vaoCircle;
-    vaoCircle.Bind();
-    vaoCircle.AddBuffer(vboCircle, 0, 3, GL_FLOAT, 3 * sizeof(float));
-    vaoCircle.Unbind(); 
+    // Create a single vertex array and buffer
+    GLuint VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    // Bind the vertex array
+    glBindVertexArray(VAO);
+
+    // Bind and fill the buffer with the vertices data
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+
+    // Set up vertex attributes
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+
+    VertexBuffer vboCircle(cursorCircle.vertices.data(), sizeof(float) * cursorCircle.vertices.size()); 
+    VertexArray vaoCircle; 
+    vaoCircle.Bind(); 
+    vaoCircle.AddBuffer(vboCircle, 0, 3, GL_FLOAT, 3 * sizeof(float)); 
+    vaoCircle.Unbind();  
+
+    // Enable depth testing.
+    glEnable(GL_DEPTH_TEST); 
 
     // Main loop
     while (!window.shouldClose()) {
         window.updateInput();
         camera.updateInput();
-        glm::vec2 cursorPos = window.getCursorPos();
+        glm::vec3 cursorPos(window.getCursorPos(), 100.0f);
         //cursorPos = (cursorPos - glm::vec2(window.getWindowSize()) * 0.5f) / (glm::vec2(window.getWindowSize()) * 0.5f);
 
         cursorCircle.updateCenter(cursorPos);
@@ -114,6 +175,7 @@ int main()
         //glViewport(0, 0, window.getWindowSize().x, window.getWindowSize().y);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // Enable color writes. 
 
         // If LMB clicked -> m_pigmentConc of every cell within radius is 1.0
         if (window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT)) {
@@ -128,8 +190,6 @@ int main()
                 }
             }
         }
-        
- 
 
         /* Move water functions. */
         //UpdateVelocities(Grid, &x_velocity, &y_velocity, water_pressure);
@@ -139,80 +199,37 @@ int main()
         /* Pigment functions */
         //movePigment(Grid, &x_velocity, &y_velocity);
         const glm::mat4 mvp = mainProjectionMatrix * camera.viewMatrix();
-        
-        /* RENDER GRID */
-        std::vector<float> vertices;
-        for (const auto& cell : Grid) {
 
-            glm::vec3 color;
-
-            if (cell.m_waterConc == 1 && cell.m_pigmentConc == 0) {
-                color = glm::vec3(0.7);
-            }
-            else if (cell.m_pigmentConc != 0) {
-                color = glm::vec3(cell.m_pigmentConc, 0, 0);
-            }
-            else {
-                color = glm::vec3(1);
-            }
-
-            vertices.insert(vertices.end(), {
-                cell.m_position.x, cell.m_position.y, 0.0f, color.r, color.g, color.b,
-                cell.m_position.x + 1, cell.m_position.y, 0.0f, color.r, color.g, color.b,
-                cell.m_position.x, cell.m_position.y + 1, 0.0f, color.r, color.g, color.b,
-                cell.m_position.x + 1, cell.m_position.y + 1, 0.0f, color.r, color.g, color.b
-                });
-        }
-
-        // Create a single vertex array and buffer
-        GLuint VAO, VBO;
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-
-        // Bind the vertex array
-        glBindVertexArray(VAO);
-
-        // Bind and fill the buffer with the vertices data
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
-
-        // Set up vertex attributes
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-
-        // Render all cells in one pass
         paperShader.bind();
-        glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(mvp));
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.size() / 6);
+        {
+            glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(mvp));
+            //glUniform3fv(1, 1, glm::value_ptr(lights[0].position));  
+            glBindVertexArray(VAO);
 
-        // Clean up
-        glDeleteVertexArrays(1, &VAO);
-        glDeleteBuffers(1, &VBO);
-
-        //glDisable(GL_DEPTH_TEST);
-
-        //circleShader.bind();
-        //{   // Draw circle around cursor
-        //    glViewport(0, 0, window.getWindowSize().x, window.getWindowSize().y);
-        //    vaoCircle.Bind();
-
-        //    glm::vec3 colorCircle(0.0, 0.0, 0.0);
-        //    {
-        //        glUniform3fv(2, 1, glm::value_ptr(colorCircle));
-        //        glUniform2fv(3, 1, glm::value_ptr(cursorPos));
-        //        glDrawArrays(GL_LINE_STRIP, 0, cursorCircle.vertices.size() / 3);
-        //    }
-        //}
-        ////Re-enable depth testing
-        //glEnable(GL_DEPTH_TEST);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.size() / 9);
+        }
+        // Draw circle around cursor
+        circleShader.bind();
+        {
+            glViewport(0, 0, window.getWindowSize().x, window.getWindowSize().y);
+            vaoCircle.Bind();
+        
+            glm::vec3 colorCircle(0.0, 0.0, 0.0);
+            glUniform3fv(2, 1, glm::value_ptr(colorCircle));
+            glUniform2fv(3, 1, glm::value_ptr(cursorPos));
+            glDrawArrays(GL_LINE_STRIP, 0, cursorCircle.vertices.size() / 3);
+        }
+        //Re-enable depth testing
+        glEnable(GL_DEPTH_TEST);
 
         glfwPollEvents();
 
         // Present result to the screen.
         window.swapBuffers();
     }
+    // Clean up
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
 
     return 0;
 }

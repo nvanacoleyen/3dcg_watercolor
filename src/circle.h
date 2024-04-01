@@ -11,12 +11,12 @@ DISABLE_WARNINGS_POP()
 
 class Circle {
 public:
-    Circle(Window* pWindow, glm::vec2 pos, float radius, int thickness, int vCount);
+    Circle(Window* pWindow, glm::vec3 pos, float radius, int thickness, int vCount);
 
     void buildCircle(int thickness, int vCount, float aspectRatio); 
-    void updateCenter(glm::vec2 center);
+    void updateCenter(glm::vec3 center);
 
-    glm::vec2 m_position;
+    glm::vec3 m_position;
     float m_radius;
     float m_thickness;
     float m_vCount;

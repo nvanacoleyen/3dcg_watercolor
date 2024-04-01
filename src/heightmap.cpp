@@ -1,9 +1,5 @@
 #include "heightmap.h"
-//#include <opencv2/opencv.hpp>  
-#include <framework/SimplexNoise.h> 
-#include <stb/stb_image.h>
-#include <framework/window.h>
-#include <framework/mesh.h>
+
 
 
 std::vector<std::vector<double>> generatePerlinNoise(int width, int height, int octaves, double lucanarity, double gain)
@@ -45,78 +41,74 @@ void normalizeHeightmap(std::vector<std::vector<double>>& heightmap) {
     }
 }
 
-//// Function to visualize the heightmap using OpenCV
-//void visualizeHeightmap(std::vector<std::vector<double>>& heightmap) 
-//{
-//    // Create an OpenCV Mat object to store the image
-//    cv::Mat image(heightmap.size(), heightmap[0].size(), CV_8UC1);
-//
-//    // Iterate over each pixel in the heightmap
-//    for (int y = 0; y < heightmap.size(); ++y) {
-//        for (int x = 0; x < heightmap[y].size(); ++x) {
-//            // Convert the normalized height value to pixel intensity (0-255)
-//            int intensity = static_cast<int>(heightmap[y][x] * 255);
-//
-//            // Set the pixel value in the image
-//            image.at<uchar>(y, x) = intensity;
-//        }
-//    }
-//
-//    // Display the image using OpenCV
-//    cv::imshow("Heightmap", image);
-//
-//    // Save the image as a PNG file
-//    std::string filename = "resources/heightmap.png";
-//    bool success = cv::imwrite(filename, image);
-//
-//    // Check if the image writing was successful
-//    if (success) {
-//        std::cout << "Heightmap image saved successfully." << std::endl;
-//    }
-//    else {
-//        std::cerr << "Error: Failed to save heightmap image." << std::endl;
-//    }
-//
-//    cv::waitKey(0);
-//}
-
-std::vector<float> createHeightmapVertices(std::string& imagePath)
+// Function to visualize the heightmap using OpenCV
+void visualizeHeightmap(std::vector<std::vector<double>>& heightmap) 
 {
-    std::vector<float> vertices;
+    // Create an OpenCV Mat object to store the image
+    cv::Mat image(heightmap.size(), heightmap[0].size(), CV_8UC1);
 
-    // load height map texture
-    int width, height, nChannels;
-    unsigned char* data = stbi_load(imagePath.c_str(),
-        &width, &height, &nChannels, 0); 
-    if (stbi_failure_reason())
-        std::cout << stbi_failure_reason();
+    // Iterate over each pixel in the heightmap
+    for (int y = 0; y < heightmap.size(); ++y) {
+        for (int x = 0; x < heightmap[y].size(); ++x) {
+            // Convert the normalized height value to pixel intensity (0-255)
+            int intensity = static_cast<int>(heightmap[y][x] * 255);
+
+            // Set the pixel value in the image
+            image.at<uchar>(y, x) = intensity;
+        }
+    }
+
+    // Display the image using OpenCV
+    cv::imshow("Heightmap", image);
+
+    // Save the image as a PNG file
+    std::string filename = "resources/heightmap.png";
+    bool success = cv::imwrite(filename, image);
+
+    // Check if the image writing was successful
+    if (success) {
+        std::cout << "Heightmap image saved successfully." << std::endl;
+    }
+    else {
+        std::cerr << "Error: Failed to save heightmap image." << std::endl;
+    }
+
+    cv::waitKey(0);
+}
+
+std::vector<VertexColor> createHeightmapVertices(std::vector<std::vector<double>>& heightmap) 
+{
+    std::vector<VertexColor> vertices; 
+    unsigned int width = heightmap[0].size(); 
+    unsigned int height = heightmap.size();  
 
     for (unsigned int i = 0; i < height; i++)
     {
         for (unsigned int j = 0; j < width; j++)
         {
-            // retrieve texel for (i,j) tex coord
-            unsigned char* texel = data + (j + width * i) * nChannels;
-            // raw height at coordinate
-            unsigned char y = texel[0];
+            // Get height at coordinate (i, j)
+            double heightValue = heightmap[i][j]; 
+
+            VertexColor vertex; 
+            // Calculate vertex position based on height and grid position
+            vertex.position.x = static_cast<float>(j);  // v.x 
+            vertex.position.y = static_cast<float>(heightValue * 10); // v.y
+            vertex.position.z = static_cast<float>(i);   // v.z 
+
+            vertices.push_back(vertex);
         }
     }
-    stbi_image_free(data);
-
+    
     return vertices;
 }
 
-std::vector<unsigned int> createHeightmapIndices(std::string& imagePath)
+std::vector<unsigned int> createHeightmapIndices(std::vector<std::vector<double>>& heightmap)
 {
-    int width, height, nChannels;
-    unsigned char* data = stbi_load(imagePath.c_str(),
-        &width, &height, &nChannels, 0);
-
-    if (stbi_failure_reason()) 
-        std::cout << stbi_failure_reason(); 
-
     // index generation
     std::vector<unsigned int> indices;
+    unsigned int width = heightmap[0].size(); 
+    unsigned int height = heightmap.size();  
+
     for (unsigned int i = 0; i < height - 1; i++)       // for each row a.k.a. each strip
     {
         for (unsigned int j = 0; j < width; j++)      // for each column
@@ -131,17 +123,55 @@ std::vector<unsigned int> createHeightmapIndices(std::string& imagePath)
     return indices;
 }
 
-//void createMesh(std::vector<float> vertices, std::vector<unsigned int> indices)
-//{
-//
-//}
-
-void drawHeightmap(std::string& imagePath, std::vector<float> vertices, std::vector<unsigned int> indices)
+void createNormals(std::vector<std::vector<double>>& heightmap, std::vector<VertexColor>& vertices, std::vector<unsigned int>& indices) 
 {
-    int width, height, nChannels;
-    unsigned char* data = stbi_load(imagePath.c_str(),
-        &width, &height, &nChannels,
-        0);
+    unsigned int width = heightmap[0].size();
+    unsigned int height = heightmap.size();
+
+    // Iterate over each vertex in the grid
+    for (unsigned int i = 0; i < height - 1; ++i) {
+        for (unsigned int j = 0; j < width - 1; ++j) {
+            glm::vec3 normal(0.0f, 0.0f, 0.0f);
+
+            // Indices of the current vertex and its neighboring vertices
+            int v0Index = i * width + j;
+            int v1Index = i * width + j + 1;
+            int v2Index = (i + 1) * width + j;
+            int v3Index = (i + 1) * width + j + 1;
+
+            // Calculate normals for the upper triangle
+            glm::vec3 edge1 = vertices[v1Index].position - vertices[v0Index].position; 
+            glm::vec3 edge2 = vertices[v2Index].position - vertices[v0Index].position; 
+            glm::vec3 normalUpper = glm::cross(edge1, edge2); 
+            glm::normalize(normalUpper); 
+
+            // Calculate normals for the lower triangle
+            edge1 = vertices[v2Index].position - vertices[v1Index].position;
+            edge2 = vertices[v3Index].position - vertices[v1Index].position; 
+            glm::vec3 normalLower = glm::cross(edge1, edge2);
+            glm::normalize(normalLower); 
+
+            // Assign normals to the vertices 
+            vertices[v0Index].normal = normalUpper; 
+            //vertices[v1Index].normal = normalUpper; 
+            //vertices[v2Index].normal = normalUpper; 
+
+            //vertices[v1Index].normal = normalLower; 
+            //vertices[v2Index].normal = normalLower; 
+            //vertices[v3Index].normal = normalLower; 
+
+            //std::cout << "vertices.normal: (" << normalUpper.x << "," << normalUpper.y << "," << normalUpper.z << ")\n";
+            //std::cout << "vertices[v1Index].normal: (" << vertices[v1Index].normal.x << "," << vertices[v1Index].normal.y << "," << vertices[v1Index].normal.z << ")\n";
+            //std::cout << "vertices[v2Index].normal: (" << vertices[v2Index].normal.x << "," << vertices[v2Index].normal.y << "," << vertices[v2Index].normal.z << ")\n";
+            //std::cout << "vertices[v3Index].normal: (" << vertices[v3Index].normal.x << "," << vertices[v3Index].normal.y << "," << vertices[v3Index].normal.z << ")\n";
+        }
+    }
+}
+
+void drawHeightmap(std::vector<std::vector<double>>& heightmap, std::vector<float>& vertices, std::vector<unsigned int>& indices, const glm::mat4 mvp, const Shader& shader) 
+{ 
+    unsigned int width = heightmap[0].size(); 
+    unsigned int height = heightmap.size();   
 
     const unsigned int NUM_STRIPS = height - 1; 
     const unsigned int NUM_VERTS_PER_STRIP = width * 2; 
@@ -158,11 +188,6 @@ void drawHeightmap(std::string& imagePath, std::vector<float> vertices, std::vec
         &vertices[0],                          // pointer to first element
         GL_STATIC_DRAW);
 
-    glVertexArrayVertexBuffer(terrainVAO, 0, terrainVBO, offsetof(Vertex, position), sizeof(Vertex));
-    glVertexArrayVertexBuffer(terrainVAO, 1, terrainVBO, offsetof(Vertex, normal), sizeof(Vertex));
-    glEnableVertexArrayAttrib(terrainVAO, 0);
-    glEnableVertexArrayAttrib(terrainVAO, 1);
-
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(0);
@@ -175,7 +200,9 @@ void drawHeightmap(std::string& imagePath, std::vector<float> vertices, std::vec
         GL_STATIC_DRAW);
     
     // draw mesh
-    glBindVertexArray(terrainVAO);
+    shader.bind(); 
+    glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(mvp)); 
+    glBindVertexArray(terrainVAO); 
     // render the mesh triangle strip by triangle strip - each row at a time
     for (unsigned int strip = 0; strip < NUM_STRIPS; ++strip)
     {
@@ -184,13 +211,4 @@ void drawHeightmap(std::string& imagePath, std::vector<float> vertices, std::vec
             GL_UNSIGNED_INT,     // index data type
             (void*)(sizeof(unsigned int) * NUM_VERTS_PER_STRIP * strip)); // offset to starting index 
     }
-
-    //VertexBuffer vboPlane(verticesPlane, sizeof(verticesPlane));
-    //VertexBuffer iboPlane(indicesPlane, sizeof(indicesPlane));
-    //VertexArray vaoPlane;
-    //vaoPlane.Bind();
-    //vaoPlane.AddIndices(vaoPlane, iboPlane);
-    //vaoPlane.AddBuffer(vboPlane, 0, 3, GL_FLOAT, 5 * sizeof(float), (void*)0); // Add positions attribute
-    //vaoPlane.AddBuffer(vboPlane, 1, 2, GL_FLOAT, 5 * sizeof(float), (void*)(3 * sizeof(float))); // add texture attribute  
-    //vaoPlane.Unbind();
 }

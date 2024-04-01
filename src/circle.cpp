@@ -5,7 +5,7 @@
 //{
 //}
 
-Circle::Circle(Window* pWindow, glm::vec2 pos, float radius, int thickness, int vCount)
+Circle::Circle(Window* pWindow, glm::vec3 pos, float radius, int thickness, int vCount)
     : m_pWindow(pWindow) 
     , m_position(pos)
     , m_radius(radius) 
@@ -54,7 +54,7 @@ void Circle::buildCircle(int thickness, int vCount, float aspectRatio)
     }
 }
 
-void Circle::updateCenter(glm::vec2 center)
+void Circle::updateCenter(glm::vec3 center)
 {
     m_position = center;
 }
