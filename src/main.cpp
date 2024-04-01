@@ -41,7 +41,7 @@ struct Light {
 std::vector lights{ Light { glm::vec3(0, 0, 3), glm::vec3(1) } };
 
 bool calculate_watercolour = false;
-float brush_radius = 7;
+float brush_radius = 20;
 
 void updateColors(std::vector<float>& vertices, std::vector<Cell>& Grid, glm::vec2 cursorPos, float& brush_radius, GLuint& VBO)
 {
@@ -204,7 +204,7 @@ int main()
             }
             break;
         case GLFW_KEY_RIGHT:
-            if (brush_radius < 20) {
+            if (brush_radius < 50) {
                 brush_radius += 1;
             }
             break;
