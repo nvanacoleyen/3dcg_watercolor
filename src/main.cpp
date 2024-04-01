@@ -76,7 +76,7 @@ int main()
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
             Grid.push_back(Cell(glm::vec3(i, j, heightmap[j][i] * 100), 1)); 
-            Grid[i, j].m_height = heightmap[j][i];
+            Grid[WIDTH * j + i].m_height = heightmap[j][i];
             //Grid.push_back(Cell(glm::vec2(i, j), 1, heightmap[j][i]));
         }
     }
@@ -130,7 +130,7 @@ int main()
             waterBrush = !waterBrush;
             break;
         case GLFW_KEY_ENTER:
-            calculate_watercolour= !calculate_watercolour;
+            calculate_watercolour = !calculate_watercolour;
             break;
         case GLFW_KEY_LEFT:
             if (cursorCircle.m_radius > 0) {
@@ -182,9 +182,7 @@ int main()
     });
 
     /* SHADERS */
-    const Shader circleShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/circle_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/circle_frag.glsl").build(); 
     const Shader paperShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/paper_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/paper_frag.glsl").build();
-    const Shader terrainShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/lambert_frag.glsl").build();
 
     // Create a single vertex array and buffer
     GLuint VAO, VBO;
@@ -206,44 +204,16 @@ int main()
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
-    VertexBuffer vboCircle(cursorCircle.vertices.data(), sizeof(float) * cursorCircle.vertices.size()); 
-    VertexArray vaoCircle; 
-    vaoCircle.Bind(); 
-    vaoCircle.AddBuffer(vboCircle, 0, 3, GL_FLOAT, 3 * sizeof(float)); 
-    vaoCircle.Unbind();  
-
-    // Enable depth testing.
-    glEnable(GL_DEPTH_TEST); 
 
     // Main loop
     while (!window.shouldClose()) {
         window.updateInput();
         camera.updateInput();
 
-        glm::vec3 cursorPos(window.getCursorPos(), 100.0f);
-
-        //cursorPos = (cursorPos - glm::vec2(window.getWindowSize()) * 0.5f) / (glm::vec2(window.getWindowSize()) * 0.5f);
-
-        //cursorCircle.updateCenter(cursorPos);
-
         //glViewport(0, 0, window.getWindowSize().x, window.getWindowSize().y);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // Enable color writes. 
-
-        // If LMB clicked -> m_pigmentConc of every cell within radius is 1.0
-        if (window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT)) {
-            for (int j = cursorPos.y - cursorCircle.m_radius; j <= cursorPos.y + cursorCircle.m_radius; j++) { 
-                for (int i = cursorPos.x - cursorCircle.m_radius; i <= cursorPos.x + cursorCircle.m_radius; i++) {
-                    if (waterBrush) {
-                        Grid[WIDTH * j + i].m_waterConc = 1;
-                    }
-                    else {
-                        Grid[WIDTH * j + i].m_pigmentConc = 0.5;
-                    }
-                }
-            }
-        }
         
  
         /* You toggle these by pressing enter. */
@@ -267,19 +237,6 @@ int main()
 
             glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.size() / 9);
         }
-        // Draw circle around cursor
-        circleShader.bind();
-        {
-            glViewport(0, 0, window.getWindowSize().x, window.getWindowSize().y);
-            vaoCircle.Bind();
-        
-            glm::vec3 colorCircle(0.0, 0.0, 0.0);
-            glUniform3fv(2, 1, glm::value_ptr(colorCircle));
-            glUniform2fv(3, 1, glm::value_ptr(cursorPos));
-            glDrawArrays(GL_LINE_STRIP, 0, cursorCircle.vertices.size() / 3);
-        }
-        //Re-enable depth testing
-        glEnable(GL_DEPTH_TEST);
 
         glfwPollEvents();
 
