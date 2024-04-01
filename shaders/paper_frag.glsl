@@ -16,10 +16,10 @@ float normDot(vec3 N, vec3 L)
 
 void main()
 {
-    vec3 lightPos = vec3(800, 800, 100);
+    vec3 lightPos = vec3(800, 800, 10);
     vec3 lightDir = normalize(lightPos - fragPos);
     float brightness = 1.0 * normDot(lightDir, fragNormal);
-    brightness = clamp(brightness, 0.0, 1.0);
+    //brightness = clamp(brightness, 0.0, 1.0);
 
     vec3 finalColor = ourColor * brightness;
 

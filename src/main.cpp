@@ -42,6 +42,20 @@ std::vector lights{ Light { glm::vec3(0, 0, 3), glm::vec3(1) } };
 bool calculate_watercolour = false;
 float brush_radius = 7;
 
+glm::vec2 getCursorPos(Window* window)
+{
+    // Retrieve the DPI scaling factor
+    glm::vec2 windowSize = window->getWindowSize();
+    glm::vec2 framebufferSize = window->getFrameBufferSize();
+    glm::vec2 cursorPos = window->getCursorPos();
+
+    float dpiScalingFactor = framebufferSize.x / windowSize.x;
+
+    // Scale the cursor position by the inverse of the DPI scaling factor
+    glm::vec2 cursorPosition(cursorPos.x / dpiScalingFactor, cursorPos.y / dpiScalingFactor);
+
+    return cursorPos;
+}
 
 int main()
 {
@@ -108,13 +122,9 @@ int main()
             verticesTerrain[i].normal.x + 1,    verticesTerrain[i].normal.z + 1,    verticesTerrain[i].normal.y,
             color.r,                            color.g,                            color.b
             });
-        //vertices.insert(vertices.end(), {
-        //    cell.m_position.x,      cell.m_position.y,      cell.m_position.z, color.r, color.g, color.b,
-        //    cell.m_position.x + 1,  cell.m_position.y,      cell.m_position.z, color.r, color.g, color.b,
-        //    cell.m_position.x,      cell.m_position.y + 1,  cell.m_position.z, color.r, color.g, color.b, 
-        //    cell.m_position.x + 1,  cell.m_position.y + 1,  cell.m_position.z, color.r, color.g, color.b
-        //    });
     }
+
+    std::cout << "vertices.size(): " << vertices.size() << "\n";
 
     // Key handle function
     window.registerKeyCallback([&](int key, int /* scancode */, int action, int /* mods */) {
@@ -215,6 +225,35 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // Enable color writes. 
         
+        glm::vec2 cursorPos = getCursorPos(&window);
+
+        if (isDragging == true) {
+            // For every square in the terrain:
+            for (size_t i = 0; i < vertices.size(); i += 36)
+            {   // For every vertex in the square:
+                for (size_t k = 0; k < 4; k++)
+                {
+                    // Extract vertex position from buffer
+                    glm::vec2 vertexPos = glm::vec2(vertices[i + k * 9], vertices[i + k * 9 + 1]);
+
+                    // Calculate distance between cursor position and vertex position
+                    float distance = glm::distance(cursorPos, vertexPos);
+
+                    // If the vertex is close to the cursor position, update its color
+                    if (distance < 20) {
+                        // Update color attribute of the vertex
+                        vertices[i + k * 9 + 6] = 0.93;
+                        vertices[i + k * 9 + 7] = 0.05; 
+                        vertices[i + k * 9 + 8] = 0.8;
+                    }
+                }
+            }
+            // Update the buffer data 
+            glBindBuffer(GL_ARRAY_BUFFER, VBO); 
+            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float), vertices.data()); 
+        }
+        
+
  
         /* You toggle these by pressing enter. */
         if (calculate_watercolour) {
