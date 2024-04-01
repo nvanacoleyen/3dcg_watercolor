@@ -10,7 +10,7 @@ void movePigment(std::vector<Cell>* Grid, Staggered_Grid* u, Staggered_Grid* v)
 	std::vector<Cell> new_Grid = *Grid;
 	std::vector<Cell> current_Grid = *Grid;
 
-	float delta_t = 1 / std::ceil(std::max(u->max_value(), v->max_value()));
+	float delta_t = 1 / std::max(1.f, std::ceil(std::max(u->max_value(), v->max_value())));
 	for (float t = 0.f; t <= 1.f; t += delta_t) {
 
 		/* Loop through all cells and adjust pigments */
@@ -26,6 +26,8 @@ void movePigment(std::vector<Cell>* Grid, Staggered_Grid* u, Staggered_Grid* v)
 														  std::max(0.f, (-u->get_at_pos(i - 0.5, j) * current_Grid[WIDTH * j + i].m_pigmentConc)) +
 														  std::max(0.f, (v->get_at_pos(i, j + 0.5) * current_Grid[WIDTH * j + i].m_pigmentConc)) +
 														  std::max(0.f, (-v->get_at_pos(i, j - 0.5) * current_Grid[WIDTH * j + i].m_pigmentConc));
+
+				new_Grid[WIDTH * j + i].m_pigmentConc = std::max(0.f, new_Grid[WIDTH * j + i].m_pigmentConc);
 
 			}
 		}

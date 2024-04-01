@@ -17,8 +17,8 @@ void UpdateVelocities(std::vector<Cell>* M, Staggered_Grid* u, Staggered_Grid* v
 			glm::vec2 pos = M->at((j * WIDTH) + i).m_position;
 			if (pos.x >= WIDTH || pos.y >= HEIGHT) { continue; }
 
-			float u_delta_h = M->at((j * (WIDTH + 1)) + i + 1).m_height - M->at((j * (WIDTH + 1)) + i).m_height;
-			float v_delta_h = M->at(((j + 1) * WIDTH) + i).m_height - M->at((j * WIDTH) + i).m_height;
+			float u_delta_h = M->at((j * (WIDTH + 1)) + i + 1).m_position.z - M->at((j * (WIDTH + 1)) + i).m_position.z;
+			float v_delta_h = M->at(((j + 1) * WIDTH) + i).m_position.z - M->at((j * WIDTH) + i).m_position.z;
 
 			/* We add 1 to make it the boundary from this square to the next one. We wont go out of bounds becuse of the limits in the for loop. */
 			u->change_at_pos_by(i + 1, j, -u_delta_h);
@@ -30,7 +30,7 @@ void UpdateVelocities(std::vector<Cell>* M, Staggered_Grid* u, Staggered_Grid* v
 	/*std::vector<float> new_u = u->get_data_values();
 	std::vector<float> new_v = v->get_data_values();*/
 
-	float delta_t = 1 / ceil(std::max(u->max_value(), v->max_value()));
+	float delta_t = 1 / std::max(1.f, ceil(std::max(u->max_value(), v->max_value())));
 	for (float t = 0.f; t < 1.f; t += delta_t) {
 
 		std::vector<float> new_u = u->get_data_values();

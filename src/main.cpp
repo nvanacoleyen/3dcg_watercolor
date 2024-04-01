@@ -55,7 +55,7 @@ void updateColors(std::vector<float>& vertices, std::vector<Cell>& Grid, glm::ve
             color = glm::vec3(0.5);
         }
         else if (Grid[i / 36].m_pigmentConc != 0) {
-            color = glm::vec3(Grid[i / 36].m_pigmentConc, 0, 0);
+            color =  glm::vec3(0.5 - Grid[i / 36].m_pigmentConc, 0.5 - Grid[i / 36].m_pigmentConc, 0.5);
         }
         else {
             color = glm::vec3(1.0, 0.95, 0.9);
@@ -92,7 +92,7 @@ void updateColors(std::vector<float>& vertices, std::vector<Cell>& Grid, float& 
             color = glm::vec3(0.5);
         }
         else if (Grid[i / 36].m_pigmentConc != 0) {
-            color = glm::vec3(Grid[i / 36].m_pigmentConc, 0, 0);
+            color = glm::vec3(0.5 - Grid[i / 36].m_pigmentConc, 0.5 - Grid[i / 36].m_pigmentConc, 0.5);
         }
         else {
             color = glm::vec3(1.0, 0.95, 0.9);
@@ -144,8 +144,7 @@ int main()
     std::vector<Cell> Grid;
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
-            Grid.push_back(Cell(glm::vec3(i, j, heightmap[j][i] * 100), 1)); 
-            Grid[WIDTH * j + i].m_height = heightmap[j][i];
+            Grid.push_back(Cell(glm::vec3(i, j, heightmap[j][i]), 1)); 
         }
     }
 
@@ -156,10 +155,10 @@ int main()
         glm::vec3 color;
         // Color with/without water/pigment concentration
         if (Grid[i].m_waterConc == 1 && Grid[i].m_pigmentConc == 0) {
-            color = normalize(glm::vec3(0.3));
+            color = normalize(glm::vec3(0.5));
         }
         else if (Grid[i].m_pigmentConc != 0) {
-            color = glm::vec3(Grid[i].m_pigmentConc, 0, 0);
+            color = glm::vec3(0.5 - Grid[i].m_pigmentConc, 0.5 - Grid[i].m_pigmentConc, 0.5);
         }
         else {
             color = glm::vec3(1.0, 0.95, 0.9);
@@ -262,7 +261,7 @@ int main()
                         if (dist <= brush_radius) {
                             if (waterBrush) {
                                 Grid[WIDTH * j + i].m_waterConc = 1;
-                                Grid[WIDTH * j + i].is_wet = true;
+                                //Grid[WIDTH * j + i].is_wet = true;
                             }
                             else {
                                 Grid[WIDTH * j + i].m_pigmentConc = 0.5;
