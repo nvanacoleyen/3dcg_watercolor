@@ -284,15 +284,14 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // Enable color writes. 
-        
-        
+
 
         /* You toggle these by pressing enter. */
         if (calculate_watercolour) {
             /* Move water functions. */
             UpdateVelocities(&Grid, &x_velocity, &y_velocity, &water_pressure);
             RelaxDivergence(&x_velocity, &y_velocity, &water_pressure);
-            /* Here we would do flow outward if we are implementing that function */
+            FlowOutward(&Grid, &water_pressure);
 
             /* Pigment functions */
             movePigment(&Grid, &x_velocity, &y_velocity);

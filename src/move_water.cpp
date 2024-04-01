@@ -63,20 +63,15 @@ void UpdateVelocities(std::vector<Cell>* M, Staggered_Grid* u, Staggered_Grid* v
  */
 void EnforceBoundaryConditions(std::vector<Cell>* M, Staggered_Grid* u, Staggered_Grid* v)
 {
-	int count = 0;
 	for (int i = 0; i < M->size(); i++) {
 		Cell* cell = &(M->at(i));
 
-		/* If the cell is not wet, we zero the surrounding velocities. */
-		if (!cell->is_wet) {
+		/* If the cell is not wet, we zero the surrounding velocities. We have a tiny buffer for what exactly is 'not wet'. */
+		if (cell->m_waterConc < 0.01f) {
 			u->zero_at_pos(cell->m_position.x, cell->m_position.y);
 			v->zero_at_pos(cell->m_position.x, cell->m_position.y);
 		}
-		if (cell->is_wet) {
-			count++;
-		}
 	}
-	count++;
 }
 
 /**
@@ -92,8 +87,8 @@ void RelaxDivergence(Staggered_Grid* u, Staggered_Grid* v, std::vector<float>* p
 	float tolerance = 0.01; /* tau */
 	
 	/* Being honest I don't really know if this one had an affect so ill just leave both versions as comments so we can see it later or something if it is a concern. */
-	float some_multiplier_idk_man = 0.1; /* xi */
-	//float some_multiplier_idk_man = -0.1; /* xi */
+	//float some_multiplier_idk_man = 0.1; /* xi */
+	float some_multiplier_idk_man = -0.1; /* xi */
 
 
 	float delta_max = 0;
@@ -122,4 +117,66 @@ void RelaxDivergence(Staggered_Grid* u, Staggered_Grid* v, std::vector<float>* p
 		v->set_new_data_values(new_v);
 		t++;
 	} while (delta_max > tolerance && t < N);
+}
+
+/**
+ * Removes some water and makes the pigment flow toward the edges of the wet area
+ */
+void FlowOutward(std::vector<Cell>* M, std::vector<float>* p)
+{
+	/* Constants for the function */
+	float eta = 0.01f;
+	int kernel_size = 10;
+
+	std::vector<Cell> gaussianGrid = GaussianCellFilter(M, kernel_size);
+
+	for (int j = 0; j < HEIGHT; j++) {
+		for (int i = 0; i < WIDTH; i++) {
+			int location = j * WIDTH + i;
+			p->at(location) = p->at(location) - eta * (1 - gaussianGrid.at(location).m_waterConc) * M->at(location).m_waterConc;
+		}
+	}
+}
+
+/**
+ * Makes a gaussian cell filter for the water concentration of the wet mask of the cells
+ */
+std::vector<Cell> GaussianCellFilter(std::vector<Cell>* M, int gaussian_radius)
+{
+	std::vector<Cell> res;
+	for (int j = 0; j < HEIGHT; j++) {
+		for (int i = 0; i < WIDTH; i++) {
+			Cell current_cell = M->at(j * WIDTH + i);
+			float current_water_conc = 0.f;
+			int size_of_grid = 0;
+			for (int y = j - gaussian_radius / 2; y < j + gaussian_radius / 2; y++) {
+				for (int x = i - gaussian_radius / 2; x < i + gaussian_radius / 2; x++) {
+					int local_x = x;
+					int local_y = y;
+
+					/* If the gaussian goes out of range, we edge extend it essentially. */
+					if (y < 0) { local_y = 0; }  
+					else if (y >= HEIGHT) { local_y = HEIGHT - 1; }
+
+					if (x < 0) { local_x = 0; }
+					else if (x >= WIDTH) { local_x = WIDTH - 1; }
+
+					current_water_conc += M->at(local_y * WIDTH + local_x).m_waterConc;
+					size_of_grid++;
+				}
+			}
+
+			/* Just an additional safeguard */
+			if (size_of_grid == 0) {
+				current_cell.m_waterConc = 0;
+			}
+			else {
+				current_cell.m_waterConc = current_water_conc / size_of_grid;
+			}
+			
+
+			res.push_back(current_cell);
+		}
+	}
+	return res;
 }
