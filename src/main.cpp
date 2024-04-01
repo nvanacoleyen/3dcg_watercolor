@@ -87,9 +87,53 @@ int main()
         case GLFW_KEY_ENTER:
             calculate_watercolour= !calculate_watercolour;
             break;
+        case GLFW_KEY_LEFT:
+            if (cursorCircle.m_radius > 0) {
+                cursorCircle.m_radius -= 1;
+            }
+            break;
+        case GLFW_KEY_RIGHT:
+            if (cursorCircle.m_radius < 20) {
+                cursorCircle.m_radius += 1;
+            }
+            break;
         default:
             break;
         };
+    });
+
+    bool isDragging = false;
+
+    window.registerMouseButtonCallback([&](int button, int action, int mods) {
+
+        if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+            if (action == GLFW_PRESS) {
+                isDragging = true;
+            }
+            else if (action == GLFW_RELEASE) {
+                isDragging = false;
+            }
+        }
+
+    });
+
+    window.registerMouseMoveCallback([&](const glm::vec2& cursorPos) {
+        if (isDragging) {
+            for (int j = cursorPos.y - cursorCircle.m_radius; j <= cursorPos.y + cursorCircle.m_radius; j++) {
+                for (int i = cursorPos.x - cursorCircle.m_radius; i <= cursorPos.x + cursorCircle.m_radius; i++) {
+                    float dist = sqrt(pow(i - cursorPos.x, 2) + pow(j - cursorPos.y, 2));
+                    if (dist <= cursorCircle.m_radius) {
+                        if (waterBrush) {
+                            Grid[WIDTH * j + i].m_waterConc = 1;
+                            Grid[WIDTH * j + i].is_wet = true;
+                        }
+                        else {
+                            Grid[WIDTH * j + i].m_pigmentConc = 0.5;
+                        }
+                    }
+                }
+            }
+        }
     });
 
     const Shader circleShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/circle_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/circle_frag.glsl").build(); 
@@ -98,39 +142,24 @@ int main()
     // Enable depth testing.
     glEnable(GL_DEPTH_TEST);  
 
-    VertexBuffer vboCircle(cursorCircle.vertices.data(), sizeof(float) * cursorCircle.vertices.size());
-    VertexArray vaoCircle;
-    vaoCircle.Bind();
-    vaoCircle.AddBuffer(vboCircle, 0, 3, GL_FLOAT, 3 * sizeof(float));
-    vaoCircle.Unbind(); 
+    //VertexBuffer vboCircle(cursorCircle.vertices.data(), sizeof(float) * cursorCircle.vertices.size());
+    //VertexArray vaoCircle;
+    //vaoCircle.Bind();
+    //vaoCircle.AddBuffer(vboCircle, 0, 3, GL_FLOAT, 3 * sizeof(float));
+    //vaoCircle.Unbind(); 
 
     // Main loop
     while (!window.shouldClose()) {
         window.updateInput();
         camera.updateInput();
-        glm::vec2 cursorPos = window.getCursorPos();
+        
         //cursorPos = (cursorPos - glm::vec2(window.getWindowSize()) * 0.5f) / (glm::vec2(window.getWindowSize()) * 0.5f);
 
-        cursorCircle.updateCenter(cursorPos);
+        //cursorCircle.updateCenter(cursorPos);
 
         //glViewport(0, 0, window.getWindowSize().x, window.getWindowSize().y);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // If LMB clicked -> m_pigmentConc of every cell within radius is 1.0
-        if (window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT)) {
-            for (int j = cursorPos.y - cursorCircle.m_radius; j <= cursorPos.y + cursorCircle.m_radius; j++) { 
-                for (int i = cursorPos.x - cursorCircle.m_radius; i <= cursorPos.x + cursorCircle.m_radius; i++) {
-                    if (waterBrush) {
-                        Grid[WIDTH * j + i].m_waterConc = 1;
-                        Grid[WIDTH * j + i].is_wet = true;
-                    }
-                    else {
-                        Grid[WIDTH * j + i].m_pigmentConc = 0.5;
-                    }
-                }
-            }
-        }
         
  
         /* You toggle these by pressing enter. */
