@@ -42,21 +42,6 @@ std::vector lights{ Light { glm::vec3(0, 0, 3), glm::vec3(1) } };
 bool calculate_watercolour = false;
 float brush_radius = 7;
 
-glm::vec2 getCursorPos(Window* window)
-{
-    // Retrieve the DPI scaling factor
-    glm::vec2 windowSize = window->getWindowSize();
-    glm::vec2 framebufferSize = window->getFrameBufferSize();
-    glm::vec2 cursorPos = window->getCursorPos();
-
-    float dpiScalingFactor = framebufferSize.x / windowSize.x;
-
-    // Scale the cursor position by the inverse of the DPI scaling factor
-    glm::vec2 cursorPosition(cursorPos.x / dpiScalingFactor, cursorPos.y / dpiScalingFactor);
-
-    return cursorPos;
-}
-
 int main()
 {
     Window window{ "Watercolor", glm::ivec2(WIDTH, HEIGHT), OpenGLVersion::GL45 };
@@ -106,7 +91,7 @@ int main()
             color = glm::vec3(Grid[i].m_pigmentConc, 0, 0);
         }
         else {
-            color = normalize(glm::vec3(255, 240, 219));
+            color = glm::vec3(1.0, 0.95, 0.9);
         } // Create terrain vertices
         vertices.insert(vertices.end(), {
             verticesTerrain[i].position.x,      verticesTerrain[i].position.z,      verticesTerrain[i].position.y,
@@ -225,7 +210,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // Enable color writes. 
         
-        glm::vec2 cursorPos = getCursorPos(&window);
+        glm::vec2 cursorPos = window.getCursorPos() / window.getDpiScalingFactor();
 
         if (isDragging == true) {
             // For every square in the terrain:
