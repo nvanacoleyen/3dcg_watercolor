@@ -31,6 +31,7 @@ DISABLE_WARNINGS_POP()
 
 bool cursorCircle = true;
 bool waterBrush = true;
+bool isDragging = false;
 
 
 struct Light {
@@ -44,6 +45,7 @@ float brush_radius = 7;
 
 void updateColors(std::vector<float>& vertices, std::vector<Cell>& Grid, glm::vec2 cursorPos, float& brush_radius, GLuint& VBO)
 {
+
     glm::vec3 color;
     // Color with/without water/pigment concentration
 
@@ -75,9 +77,39 @@ void updateColors(std::vector<float>& vertices, std::vector<Cell>& Grid, glm::ve
             }
         }
     }
-    // Update the buffer data 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); 
-    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float), vertices.data());
+    
+}
+
+void updateColors(std::vector<float>& vertices, std::vector<Cell>& Grid, float& brush_radius, GLuint& VBO)
+{
+
+    glm::vec3 color;
+    // Color with/without water/pigment concentration
+
+    for (size_t i = 0; i < vertices.size(); i += 36)
+    {   // For every vertex in the square:
+        if (Grid[i / 36].m_waterConc == 1 && Grid[i / 36].m_pigmentConc == 0) {
+            color = glm::vec3(0.5);
+        }
+        else if (Grid[i / 36].m_pigmentConc != 0) {
+            color = glm::vec3(Grid[i / 36].m_pigmentConc, 0, 0);
+        }
+        else {
+            color = glm::vec3(1.0, 0.95, 0.9);
+        }
+        for (size_t k = 0; k < 4; k++)
+        {
+            // Extract vertex position from buffer
+            glm::vec2 vertexPos = glm::vec2(vertices[i + k * 9], vertices[i + k * 9 + 1]);
+
+            // If the vertex is close to the cursor position, update its color
+            // Update color attribute of the vertex
+            vertices[i + k * 9 + 6] = color.r;
+            vertices[i + k * 9 + 7] = color.g;
+            vertices[i + k * 9 + 8] = color.b;
+        }
+    }
+
 }
 
 
@@ -179,7 +211,7 @@ int main()
         };
     });
 
-    bool isDragging = false;
+    
 
     window.registerMouseButtonCallback([&](int button, int action, int mods) {
 
@@ -219,7 +251,6 @@ int main()
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
-    glm::vec2 cursorPosition = window.getCursorPos() / window.getDpiScalingFactor();
 
     window.registerMouseMoveCallback([&](const glm::vec2& cursorPos) {   
         glm::vec2 cursorPosition = window.getCursorPos() / window.getDpiScalingFactor(); 
@@ -240,7 +271,6 @@ int main()
                     }
                 }
             }
-            updateColors(vertices, Grid, cursorPosition, brush_radius, VBO);
         }
     }); 
 
@@ -266,8 +296,17 @@ int main()
 
             /* Pigment functions */
             movePigment(&Grid, &x_velocity, &y_velocity);
-            updateColors(vertices, Grid, cursorPosition, brush_radius, VBO);   
+            updateColors(vertices, Grid, brush_radius, VBO);   
         }
+        if (isDragging) {
+            glm::vec2 cursorPosition = window.getCursorPos() / window.getDpiScalingFactor();
+            updateColors(vertices, Grid, cursorPosition, brush_radius, VBO);
+        }
+
+
+        // Update the buffer data 
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float), vertices.data());
 
         const glm::mat4 mvp = mainProjectionMatrix * camera.viewMatrix();
 
