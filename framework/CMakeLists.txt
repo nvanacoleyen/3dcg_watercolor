@@ -17,8 +17,8 @@ if (FRAMEWORK_BASIC_LIBRARY)
 else()
 	set(OpenGL_GL_PREFERENCE GLVND) # Prevent CMake warning about legacy fallback on Linux.
 	find_package(OpenGL REQUIRED)
-	set(OpenCV_DIR ${CMAKE_CURRENT_LIST_DIR}third_party/opencv/cmake)
-	find_package(OpenCV REQUIRED)
+	# set(OpenCV_DIR ${CMAKE_CURRENT_LIST_DIR}third_party/opencv/cmake)
+	# find_package(OpenCV REQUIRED)
 
 	add_library(CGFramework STATIC
 		"src/trackball.cpp"
@@ -33,7 +33,7 @@ else()
 		"src/texture.cpp"
 		"src/SimplexNoise.cpp")
 	target_include_directories(CGFramework PRIVATE "include/framework/" PUBLIC "include/")
-	target_link_libraries(CGFramework PUBLIC OpenGL::GL glad glm glfw imgui stb tinyobjloader fmt nativefiledialog toml ${OpenCV_LIBS}) 
+	target_link_libraries(CGFramework PUBLIC OpenGL::GL glad glm glfw imgui stb tinyobjloader fmt nativefiledialog toml ) 
 	target_compile_features(CGFramework PUBLIC cxx_std_20)
 	set_property(TARGET CGFramework PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()

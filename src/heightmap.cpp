@@ -42,39 +42,39 @@ void normalizeHeightmap(std::vector<std::vector<double>>& heightmap) {
 }
 
 // Function to visualize the heightmap using OpenCV
-void visualizeHeightmap(std::vector<std::vector<double>>& heightmap) 
-{
-    // Create an OpenCV Mat object to store the image
-    cv::Mat image(heightmap.size(), heightmap[0].size(), CV_8UC1);
-
-    // Iterate over each pixel in the heightmap
-    for (int y = 0; y < heightmap.size(); ++y) {
-        for (int x = 0; x < heightmap[y].size(); ++x) {
-            // Convert the normalized height value to pixel intensity (0-255)
-            int intensity = static_cast<int>(heightmap[y][x] * 255);
-
-            // Set the pixel value in the image
-            image.at<uchar>(y, x) = intensity;
-        }
-    }
-
-    // Display the image using OpenCV
-    cv::imshow("Heightmap", image);
-
-    // Save the image as a PNG file
-    std::string filename = "resources/heightmap.png";
-    bool success = cv::imwrite(filename, image);
-
-    // Check if the image writing was successful
-    if (success) {
-        std::cout << "Heightmap image saved successfully." << std::endl;
-    }
-    else {
-        std::cerr << "Error: Failed to save heightmap image." << std::endl;
-    }
-
-    cv::waitKey(0);
-}
+//void visualizeHeightmap(std::vector<std::vector<double>>& heightmap) 
+//{
+//    // Create an OpenCV Mat object to store the image
+//    cv::Mat image(heightmap.size(), heightmap[0].size(), CV_8UC1);
+//
+//    // Iterate over each pixel in the heightmap
+//    for (int y = 0; y < heightmap.size(); ++y) {
+//        for (int x = 0; x < heightmap[y].size(); ++x) {
+//            // Convert the normalized height value to pixel intensity (0-255)
+//            int intensity = static_cast<int>(heightmap[y][x] * 255);
+//
+//            // Set the pixel value in the image
+//            image.at<uchar>(y, x) = intensity;
+//        }
+//    }
+//
+//    // Display the image using OpenCV
+//    cv::imshow("Heightmap", image);
+//
+//    // Save the image as a PNG file
+//    std::string filename = "resources/heightmap.png";
+//    bool success = cv::imwrite(filename, image);
+//
+//    // Check if the image writing was successful
+//    if (success) {
+//        std::cout << "Heightmap image saved successfully." << std::endl;
+//    }
+//    else {
+//        std::cerr << "Error: Failed to save heightmap image." << std::endl;
+//    }
+//
+//    cv::waitKey(0);
+//}
 
 std::vector<VertexColor> createHeightmapVertices(std::vector<std::vector<double>>& heightmap) 
 {

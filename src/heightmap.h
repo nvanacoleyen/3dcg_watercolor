@@ -6,7 +6,7 @@
 #include <iostream>
 #include <filesystem>
 #include "heightmap.h"
-#include <opencv2/opencv.hpp>   
+//#include <opencv2/opencv.hpp>    
 #include <framework/SimplexNoise.h> 
 #include <stb/stb_image.h>
 #include <framework/window.h>
