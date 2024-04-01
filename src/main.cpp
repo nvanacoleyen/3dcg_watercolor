@@ -55,7 +55,8 @@ void updateColors(std::vector<float>& vertices, std::vector<Cell>& Grid, glm::ve
             color = glm::vec3(0.5);
         }
         else if (Grid[i / 36].m_pigmentConc != 0) {
-            color =  glm::vec3(0.5 - Grid[i / 36].m_pigmentConc, 0.5 - Grid[i / 36].m_pigmentConc, 0.5);
+            float pigment_factor = std::min(1.f, std::max(0.f, Grid[i / 36].m_pigmentConc));
+            color = glm::vec3(0.5 - (0.5 * pigment_factor), 0.5 - (0.5 * pigment_factor), 0.5 + (0.5 * pigment_factor));
         }
         else {
             color = glm::vec3(1.0, 0.95, 0.9);
@@ -92,7 +93,8 @@ void updateColors(std::vector<float>& vertices, std::vector<Cell>& Grid, float& 
             color = glm::vec3(0.5);
         }
         else if (Grid[i / 36].m_pigmentConc != 0) {
-            color = glm::vec3(0.5 - Grid[i / 36].m_pigmentConc, 0.5 - Grid[i / 36].m_pigmentConc, 0.5);
+            float pigment_factor = std::min(1.f, std::max(0.f, Grid[i / 36].m_pigmentConc));
+            color = glm::vec3(0.5 - (0.5 * pigment_factor), 0.5 - (0.5 * pigment_factor), 0.5 + (0.5 * pigment_factor));
         }
         else {
             color = glm::vec3(1.0, 0.95, 0.9);
@@ -158,7 +160,8 @@ int main()
             color = normalize(glm::vec3(0.5));
         }
         else if (Grid[i].m_pigmentConc != 0) {
-            color = glm::vec3(0.5 - Grid[i].m_pigmentConc, 0.5 - Grid[i].m_pigmentConc, 0.5);
+            float pigment_factor = std::min(1.f, std::max(0.f, Grid[i].m_pigmentConc));
+            color = glm::vec3(0.5 - (0.5 * pigment_factor), 0.5 - (0.5 * pigment_factor), 0.5 + (0.5 * pigment_factor));
         }
         else {
             color = glm::vec3(1.0, 0.95, 0.9);
@@ -264,7 +267,7 @@ int main()
                                 //Grid[WIDTH * j + i].is_wet = true;
                             }
                             else {
-                                Grid[WIDTH * j + i].m_pigmentConc = 0.5;
+                                Grid[WIDTH * j + i].m_pigmentConc = 1;
                             }
                         }
                     }
