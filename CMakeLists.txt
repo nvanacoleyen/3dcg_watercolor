@@ -16,19 +16,19 @@ else()
 endif()
 
 add_executable(Watercolor 
-        "src/main.cpp"  
+    #"src/main3.cpp"  
 	"src/camera.h"
 	"src/camera.cpp"  
-        "src/cell.h" 
-        "src/cell.cpp" 
+    "src/cell.h" 
+    "src/cell.cpp" 
 	"src/heightmap.h"
 	"src/heightmap.cpp"
-        "src/staggered_grid.h" 
-        "src/staggered_grid.cpp" 
-        "src/move_water.cpp" 
-        "src/global_constants.h" 
-        "src/move_pigment.cpp" 
-        "src/move_pigment.h")
+    "src/staggered_grid.h" 
+    "src/staggered_grid.cpp" 
+    "src/move_water.cpp" 
+    "src/global_constants.h" 
+    "src/move_pigment.cpp" 
+    "src/move_pigment.h" "src/paper/triangle_list.h" "src/paper/triangle_list.cpp" "src/paper/terrain.h" "src/paper/terrain.cpp" "src/main.cpp")
 target_compile_features(Watercolor PRIVATE cxx_std_20)
 target_link_libraries(Watercolor PRIVATE CGFramework)
 enable_sanitizers(Watercolor)

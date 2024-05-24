@@ -82,6 +82,7 @@ std::vector<VertexColor> createHeightmapVertices(std::vector<std::vector<double>
     unsigned int width = heightmap[0].size(); 
     unsigned int height = heightmap.size();  
 
+
     for (unsigned int i = 0; i < height; i++)
     {
         for (unsigned int j = 0; j < width; j++)
@@ -109,16 +110,41 @@ std::vector<unsigned int> createHeightmapIndices(std::vector<std::vector<double>
     unsigned int width = heightmap[0].size(); 
     unsigned int height = heightmap.size();  
 
-    for (unsigned int i = 0; i < height - 1; i++)       // for each row a.k.a. each strip
-    {
-        for (unsigned int j = 0; j < width; j++)      // for each column
-        {
-            for (unsigned int k = 0; k < 2; k++)      // for each side of the strip
-            {
-                indices.push_back(j + width * (i + k));
-            }
+    for (unsigned int i = 0; i < height - 1; i++) {
+        if (i > 0) {
+            // Insert degenerate triangles by repeating the last vertex of the previous row
+            // and the first vertex of the new row
+            indices.push_back((i - 1) * width);
+            indices.push_back(i * width);
+        }
+    
+        for (unsigned int j = 0; j < width; j++) {
+            // Add the vertices for the current row
+            indices.push_back(i * width + j);
+            indices.push_back((i + 1) * width + j);
         }
     }
+
+    //for (unsigned int z = 0; z < height - 1; z++) {
+    //    for (unsigned int x = 0; x < width - 1; x++) {
+    //        unsigned int indexBottomLeft = z * width + x;
+    //        unsigned int indexTopLeft = (z + 1) * width + x;
+    //        unsigned int indexTopRight = (z + 1) * width + x + 1;
+    //        unsigned int indexBottomRight = z * width + x + 1;
+    //
+    //        // Add top left triangle
+    //        indices.push_back(indexBottomLeft);
+    //        indices.push_back(indexTopLeft);
+    //        indices.push_back(indexTopRight);
+    //
+    //        // Add bottom right triangle
+    //        indices.push_back(indexBottomLeft);
+    //        indices.push_back(indexTopRight);
+    //        indices.push_back(indexBottomRight);
+    //    }
+    //}
+    std::cout << "height: " << height << " \n";
+    std::cout << "indices.size(): " << indices.size() << " \n";
 
     return indices;
 }

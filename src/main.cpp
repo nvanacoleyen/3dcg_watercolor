@@ -5,6 +5,7 @@
 #include "move_water.h"
 #include "move_pigment.h"
 #include "camera.h"
+#include "paper/terrain.h" 
 // Suppress warnings in third-party code.
 #include <framework/disable_all_warnings.h>
 DISABLE_WARNINGS_PUSH()
@@ -43,75 +44,38 @@ std::vector lights{ Light { glm::vec3(0, 0, 3), glm::vec3(1) } };
 bool calculate_watercolour = false;
 float brush_radius = 20;
 
-void updateColors(std::vector<float>& vertices, std::vector<Cell>& Grid, glm::vec2 cursorPos, float& brush_radius, GLuint& VBO)
+void updateColors(std::vector<paperVertex>& vertices, std::vector<Cell>& Grid, float& brush_radius, GLuint& VBO)
 {
-
     glm::vec3 color;
+
     // Color with/without water/pigment concentration
-
-    for (size_t i = 0; i < vertices.size(); i += 36)
+    for (size_t i = 0; i < vertices.size(); i ++)
     {   // For every vertex in the square:
-        if (Grid[i / 36].m_waterConc == 1 && Grid[i / 36].m_pigmentConc == 0) {
-            color = glm::vec3(0.5);
-        }
-        else if (Grid[i / 36].m_pigmentConc != 0) {
-            float pigment_factor = std::min(1.f, std::max(0.f, Grid[i / 36].m_pigmentConc));
-            color = glm::vec3(0.5 - (0.5 * pigment_factor), 0.5 - (0.5 * pigment_factor), 0.5 + (0.5 * pigment_factor));
-        }
-        else {
-            color = glm::vec3(1.0);
-        }
-        for (size_t k = 0; k < 4; k++)
-        {
-            // Extract vertex position from buffer
-            glm::vec2 vertexPos = glm::vec2(vertices[i + k * 9], vertices[i + k * 9 + 1]);
+        color = glm::vec3(1.0f, 0.0f, 0.0f);
+        //if (Grid[i].m_waterConc == 1 && Grid[i].m_pigmentConc == 0) {
+        //    color = glm::vec3(0.5);
+        //}
+        //else if (Grid[i].m_pigmentConc != 0) {
+        //    float pigment_factor = std::min(1.f, std::max(0.f, Grid[i].m_pigmentConc));
+        //    color = glm::vec3(0.5 - (0.5 * pigment_factor), 0.5 - (0.5 * pigment_factor), 0.5 + (0.5 * pigment_factor));
+        //}
+        //else {
+        //    color = glm::vec3(1.0);
+        //}
+        vertices[i].color = color;   
 
-            // Calculate distance between cursor position and vertex position
-            float distance = glm::distance(cursorPos, vertexPos);
-
-            // If the vertex is close to the cursor position, update its color
-            if (distance < brush_radius) {
-                // Update color attribute of the vertex
-                vertices[i + k * 9 + 6] = color.r;
-                vertices[i + k * 9 + 7] = color.g;
-                vertices[i + k * 9 + 8] = color.b;
-            }
-        }
+        //for (size_t k = 0; k < 4; k++)
+        //{
+        //    // Extract vertex position from buffer
+        //    glm::vec2 vertexPos = glm::vec2(vertices[i + k * 9], vertices[i + k * 9 + 1]); // <- is this necessary?
+        //
+        //    // If the vertex is close to the cursor position, update its color
+        //    // Update color attribute of the vertex
+        //    vertices[i + k * 9 + 6] = color.r;
+        //    vertices[i + k * 9 + 7] = color.g;
+        //    vertices[i + k * 9 + 8] = color.b;
+        //}
     }
-    
-}
-
-void updateColors(std::vector<float>& vertices, std::vector<Cell>& Grid, float& brush_radius, GLuint& VBO)
-{
-
-    glm::vec3 color;
-    // Color with/without water/pigment concentration
-
-    for (size_t i = 0; i < vertices.size(); i += 36)
-    {   // For every vertex in the square:
-        if (Grid[i / 36].m_waterConc == 1 && Grid[i / 36].m_pigmentConc == 0) {
-            color = glm::vec3(0.5);
-        }
-        else if (Grid[i / 36].m_pigmentConc != 0) {
-            float pigment_factor = std::min(1.f, std::max(0.f, Grid[i / 36].m_pigmentConc));
-            color = glm::vec3(0.5 - (0.5 * pigment_factor), 0.5 - (0.5 * pigment_factor), 0.5 + (0.5 * pigment_factor));
-        }
-        else {
-            color = glm::vec3(1.0);
-        }
-        for (size_t k = 0; k < 4; k++)
-        {
-            // Extract vertex position from buffer
-            glm::vec2 vertexPos = glm::vec2(vertices[i + k * 9], vertices[i + k * 9 + 1]);
-
-            // If the vertex is close to the cursor position, update its color
-            // Update color attribute of the vertex
-            vertices[i + k * 9 + 6] = color.r;
-            vertices[i + k * 9 + 7] = color.g;
-            vertices[i + k * 9 + 8] = color.b;
-        }
-    }
-
 }
 
 
@@ -125,64 +89,34 @@ int main()
     float aspectRatio = window.getAspectRatio();
     window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
 
+    glm::vec3 lightPos(800, 800, -1000);
 
     /* GENERATE HEIGHTMAP */
-    int octaves = 5;
+    int octaves = 7;
     double lucanarity = 2.1042;
-    double gain = 3.0;
-    std::vector<std::vector<double>> heightmap = generatePerlinNoise(WIDTH, HEIGHT, octaves, lucanarity, gain);  
-    // Normalize heightmap values to range [0, 1]
-    normalizeHeightmap(heightmap);  
-    // Create heightmap vertices, indices and normals
-    std::vector<VertexColor> verticesTerrain = createHeightmapVertices(heightmap);   
-    std::vector<unsigned int> indicesTerrain = createHeightmapIndices(heightmap);   
-    createNormals(heightmap, verticesTerrain, indicesTerrain); 
+    double gain = 3;
+
+    Terrain paper(octaves, lucanarity, gain, HEIGHT, WIDTH, 0, 10);
+
+    // Get references to variables paper
+    paperMesh &paper_mesh = paper.getMesh();  
+    std::vector<std::vector<double>> &heightmap = paper.getHeightmap(); 
+    GLuint &paper_vao = paper.getVAO();
+    GLuint &paper_vbo = paper.getVBO();
 
     /* GENERATE GRID OF CELLS */
-    Staggered_Grid x_velocity(WIDTH, HEIGHT, true); 
+    Staggered_Grid x_velocity(WIDTH, HEIGHT, true);
     Staggered_Grid y_velocity(WIDTH, HEIGHT, false);
     std::vector<float> water_pressure(WIDTH * HEIGHT, 0.f);
-    // Create grid of cells
+
     std::vector<Cell> Grid;
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
-            Grid.push_back(Cell(glm::vec3(i, j, heightmap[j][i]), 1)); 
+            Grid.push_back(Cell(glm::vec3(i, j, heightmap[j][i]), 1));
         }
     }
-
-    /* RENDER GRID */
-    std::vector<float> vertices;
-    for (int i = 0; i < Grid.size(); i++) 
-    {
-        glm::vec3 color;
-        // Color with/without water/pigment concentration
-        if (Grid[i].m_waterConc == 1 && Grid[i].m_pigmentConc == 0) {
-            color = normalize(glm::vec3(0.5));
-        }
-        else if (Grid[i].m_pigmentConc != 0) {
-            float pigment_factor = std::min(1.f, std::max(0.f, Grid[i].m_pigmentConc));
-            color = glm::vec3(0.5 - (0.5 * pigment_factor), 0.5 - (0.5 * pigment_factor), 0.5 + (0.5 * pigment_factor));
-        }
-        else {
-            color = glm::vec3(1.0);
-        } // Create terrain vertices
-        vertices.insert(vertices.end(), {
-            verticesTerrain[i].position.x,      verticesTerrain[i].position.z,      verticesTerrain[i].position.y,
-            verticesTerrain[i].normal.x,        verticesTerrain[i].normal.z,        verticesTerrain[i].normal.y,
-            color.r,                            color.g,                            color.b,
-            verticesTerrain[i].position.x + 1,  verticesTerrain[i].position.z,      verticesTerrain[i].position.y,
-            verticesTerrain[i].normal.x + 1,    verticesTerrain[i].normal.z,        verticesTerrain[i].normal.y,
-            color.r,                            color.g,                            color.b,
-            verticesTerrain[i].position.x,      verticesTerrain[i].position.z + 1,  verticesTerrain[i].position.y,
-            verticesTerrain[i].normal.x,        verticesTerrain[i].normal.z + 1,    verticesTerrain[i].normal.y,
-            color.r,                            color.g,                            color.b,
-            verticesTerrain[i].position.x + 1,  verticesTerrain[i].position.z + 1,  verticesTerrain[i].position.y,
-            verticesTerrain[i].normal.x + 1,    verticesTerrain[i].normal.z + 1,    verticesTerrain[i].normal.y,
-            color.r,                            color.g,                            color.b
-            });
-    }
-
-    std::cout << "vertices.size(): " << vertices.size() << "\n";
+    
+    updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo);
 
     // Key handle function
     window.registerKeyCallback([&](int key, int /* scancode */, int action, int /* mods */) {
@@ -208,12 +142,36 @@ int main()
                 brush_radius += 1;
             }
             break;
+        //case GLFW_KEY_LEFT: 
+        //    lightPos.x -= 100;
+        //    std::cout << "lightPos: (" << lightPos.x << "," << lightPos.y << "," << lightPos.z << ")\n";
+        //    break;
+        //case GLFW_KEY_RIGHT:
+        //    lightPos.x += 100;
+        //    std::cout << "lightPos: (" << lightPos.x << "," << lightPos.y << "," << lightPos.z << ")\n";
+        //    break;
+        //case GLFW_KEY_DOWN:
+        //    lightPos.y -= 100;
+        //    std::cout << "lightPos: (" << lightPos.x << "," << lightPos.y << "," << lightPos.z << ")\n";
+        //    break;
+        //case GLFW_KEY_UP:
+        //    lightPos.y += 100;
+        //    std::cout << "lightPos: (" << lightPos.x << "," << lightPos.y << "," << lightPos.z << ")\n";
+        //    break;
+        //case GLFW_KEY_L:
+        //    lightPos.z -= 100;
+        //    std::cout << "lightPos: (" << lightPos.x << "," << lightPos.y << "," << lightPos.z << ")\n";
+        //    break;
+        //case GLFW_KEY_O:
+        //    lightPos.z += 100;
+        //    std::cout << "lightPos: (" << lightPos.x << "," << lightPos.y << "," << lightPos.z << ")\n";
+        //    break;
         default:
             break;
         };
     });
 
-    
+
 
     window.registerMouseButtonCallback([&](int button, int action, int mods) {
 
@@ -225,57 +183,37 @@ int main()
                 isDragging = false;
             }
         }
-
     });
-
-
 
     /* SHADERS */
     const Shader paperShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/paper_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/paper_frag.glsl").build();
 
-    // Create a single vertex array and buffer
-    GLuint VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    // Create buffers for terrain
+    paper.createGLState();
 
-    // Bind the vertex array
-    glBindVertexArray(VAO);
-
-    // Bind and fill the buffer with the vertices data
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
-
-    // Set up vertex attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-
-
-    window.registerMouseMoveCallback([&](const glm::vec2& cursorPos) {   
-        glm::vec2 cursorPosition = window.getCursorPos() / window.getDpiScalingFactor(); 
+    // Draw with cursor
+    window.registerMouseMoveCallback([&](const glm::vec2& cursorPos) {
+        glm::vec2 cursorPosition = window.getCursorPos() / window.getDpiScalingFactor();
         if (isDragging) {
             for (int j = cursorPosition.y - brush_radius; j <= cursorPosition.y + brush_radius; j++) {
                 for (int i = cursorPosition.x - brush_radius; i <= cursorPosition.x + brush_radius; i++) {
-                    if (j < 600 && i < 800 && j >= 0 && i >= 0) {
+                    if (j < HEIGHT && i < WIDTH && j >= 0 && i >= 0) {
                         float dist = sqrt(pow(i - cursorPosition.x, 2) + pow(j - cursorPosition.y, 2));
                         if (dist <= brush_radius) {
-                            if (waterBrush) {
-                                Grid[WIDTH * j + i].m_waterConc = 1;
-                                //Grid[WIDTH * j + i].is_wet = true;
-                            }
-                            else {
-                                Grid[WIDTH * j + i].m_pigmentConc = 1;
-                            }
+                            paper_mesh.vertices[WIDTH * j + i].color = glm::vec3(1.0f, 0.0f, 0.0f);
+                            //if (waterBrush) {
+                            //    Grid[WIDTH * j + i].m_waterConc = 1;
+                            //    //Grid[WIDTH * j + i].is_wet = true;
+                            //}
+                            //else {
+                            //    Grid[WIDTH * j + i].m_pigmentConc = 1;
+                            //}
                         }
                     }
                 }
             }
         }
-    }); 
-
+    });
 
     // Main loop
     while (!window.shouldClose()) {
@@ -284,6 +222,7 @@ int main()
 
         //glViewport(0, 0, window.getWindowSize().x, window.getWindowSize().y);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // Enable color writes. 
 
@@ -294,29 +233,27 @@ int main()
             UpdateVelocities(&Grid, &x_velocity, &y_velocity, &water_pressure);
             RelaxDivergence(&x_velocity, &y_velocity, &water_pressure);
             FlowOutward(&Grid, &water_pressure);
-
+        
             /* Pigment functions */
             movePigment(&Grid, &x_velocity, &y_velocity);
-            updateColors(vertices, Grid, brush_radius, VBO);   
-        } else if (isDragging) {
+            updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo); 
+        }
+        else if (isDragging) {
             glm::vec2 cursorPosition = window.getCursorPos() / window.getDpiScalingFactor();
-            updateColors(vertices, Grid, cursorPosition, brush_radius, VBO);
+            updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo); 
+            
         }
 
-
         // Update the buffer data 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float), vertices.data());
-
+        paper.updateBuffer(); 
+         
         const glm::mat4 mvp = mainProjectionMatrix * camera.viewMatrix();
 
         paperShader.bind();
         {
             glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(mvp));
-            //glUniform3fv(1, 1, glm::value_ptr(lights[0].position));  
-            glBindVertexArray(VAO);
-
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.size() / 9);
+            glUniform3fv(1, 1, glm::value_ptr(lightPos));    
+            paper.Render();
         }
 
         glfwPollEvents();
@@ -325,8 +262,8 @@ int main()
         window.swapBuffers();
     }
     // Clean up
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &paper_vao);
+    glDeleteBuffers(1, &paper_vbo); 
 
     return 0;
 }
