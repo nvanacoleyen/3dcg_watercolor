@@ -65,7 +65,9 @@ void Terrain::createVertices()
 
             // Calculate vertex position based on height and grid position
             vertex.position = glm::vec3(x, y, heightValue);  
-            vertex.color = glm::vec3(0.5f);  
+
+            // Give paper initial color
+            vertex.color = glm::vec3(1.0f);  
 
             m_mesh.vertices.push_back(vertex);  
         }

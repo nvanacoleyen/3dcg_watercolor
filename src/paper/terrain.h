@@ -63,7 +63,7 @@ public:
 	GLuint &getVBO();
 	GLuint &getIBO();
 
-//private:
+private:
 	std::vector<std::vector<double>> m_heightMap;  
 	paperMesh m_mesh;   
 

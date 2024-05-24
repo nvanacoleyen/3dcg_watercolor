@@ -21,7 +21,7 @@ void main()
     vec3 lightDir = normalize(lightPos - fragPos);
     float brightness = 1.0 * normDot(lightDir, fragNormal);
 
-    vec3 finalColor = vec3(0.5f) * brightness;
+    vec3 finalColor = ourColor * brightness;
 
     FragColor = vec4(finalColor, 1.0f);
 }
