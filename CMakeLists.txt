@@ -16,7 +16,7 @@ else()
 endif()
 
 add_executable(Watercolor 
-    #"src/main3.cpp"  
+    "src/main.cpp"  
 	"src/camera.h"
 	"src/camera.cpp"  
     "src/cell.h" 
@@ -28,7 +28,11 @@ add_executable(Watercolor
     "src/move_water.cpp" 
     "src/global_constants.h" 
     "src/move_pigment.cpp" 
-    "src/move_pigment.h" "src/paper/triangle_list.h" "src/paper/triangle_list.cpp" "src/paper/terrain.h" "src/paper/terrain.cpp" "src/main.cpp")
+    "src/move_pigment.h" 
+	"src/paper/triangle_list.h" 
+	"src/paper/triangle_list.cpp" 
+	"src/paper/terrain.h" 
+	"src/paper/terrain.cpp")
 target_compile_features(Watercolor PRIVATE cxx_std_20)
 target_link_libraries(Watercolor PRIVATE CGFramework)
 enable_sanitizers(Watercolor)
