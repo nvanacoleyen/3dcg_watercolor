@@ -1,7 +1,5 @@
 #include "heightmap.h"
 
-
-
 std::vector<std::vector<double>> generatePerlinNoise(int width, int height, int octaves, double lucanarity, double gain)
 {
     std::vector<std::vector<double>> heightmap(height, std::vector<double>(width));
@@ -40,41 +38,6 @@ void normalizeHeightmap(std::vector<std::vector<double>>& heightmap) {
         }
     }
 }
-
-// Function to visualize the heightmap using OpenCV
-//void visualizeHeightmap(std::vector<std::vector<double>>& heightmap) 
-//{
-//    // Create an OpenCV Mat object to store the image
-//    cv::Mat image(heightmap.size(), heightmap[0].size(), CV_8UC1);
-//
-//    // Iterate over each pixel in the heightmap
-//    for (int y = 0; y < heightmap.size(); ++y) {
-//        for (int x = 0; x < heightmap[y].size(); ++x) {
-//            // Convert the normalized height value to pixel intensity (0-255)
-//            int intensity = static_cast<int>(heightmap[y][x] * 255);
-//
-//            // Set the pixel value in the image
-//            image.at<uchar>(y, x) = intensity;
-//        }
-//    }
-//
-//    // Display the image using OpenCV
-//    cv::imshow("Heightmap", image);
-//
-//    // Save the image as a PNG file
-//    std::string filename = "resources/heightmap.png";
-//    bool success = cv::imwrite(filename, image);
-//
-//    // Check if the image writing was successful
-//    if (success) {
-//        std::cout << "Heightmap image saved successfully." << std::endl;
-//    }
-//    else {
-//        std::cerr << "Error: Failed to save heightmap image." << std::endl;
-//    }
-//
-//    cv::waitKey(0);
-//}
 
 std::vector<VertexColor> createHeightmapVertices(std::vector<std::vector<double>>& heightmap) 
 {
@@ -125,27 +88,6 @@ std::vector<unsigned int> createHeightmapIndices(std::vector<std::vector<double>
         }
     }
 
-    //for (unsigned int z = 0; z < height - 1; z++) {
-    //    for (unsigned int x = 0; x < width - 1; x++) {
-    //        unsigned int indexBottomLeft = z * width + x;
-    //        unsigned int indexTopLeft = (z + 1) * width + x;
-    //        unsigned int indexTopRight = (z + 1) * width + x + 1;
-    //        unsigned int indexBottomRight = z * width + x + 1;
-    //
-    //        // Add top left triangle
-    //        indices.push_back(indexBottomLeft);
-    //        indices.push_back(indexTopLeft);
-    //        indices.push_back(indexTopRight);
-    //
-    //        // Add bottom right triangle
-    //        indices.push_back(indexBottomLeft);
-    //        indices.push_back(indexTopRight);
-    //        indices.push_back(indexBottomRight);
-    //    }
-    //}
-    std::cout << "height: " << height << " \n";
-    std::cout << "indices.size(): " << indices.size() << " \n";
-
     return indices;
 }
 
@@ -179,17 +121,6 @@ void createNormals(std::vector<std::vector<double>>& heightmap, std::vector<Vert
 
             // Assign normals to the vertices 
             vertices[v0Index].normal = normalUpper; 
-            //vertices[v1Index].normal = normalUpper; 
-            //vertices[v2Index].normal = normalUpper; 
-
-            //vertices[v1Index].normal = normalLower; 
-            //vertices[v2Index].normal = normalLower; 
-            //vertices[v3Index].normal = normalLower; 
-
-            //std::cout << "vertices.normal: (" << normalUpper.x << "," << normalUpper.y << "," << normalUpper.z << ")\n";
-            //std::cout << "vertices[v1Index].normal: (" << vertices[v1Index].normal.x << "," << vertices[v1Index].normal.y << "," << vertices[v1Index].normal.z << ")\n";
-            //std::cout << "vertices[v2Index].normal: (" << vertices[v2Index].normal.x << "," << vertices[v2Index].normal.y << "," << vertices[v2Index].normal.z << ")\n";
-            //std::cout << "vertices[v3Index].normal: (" << vertices[v3Index].normal.x << "," << vertices[v3Index].normal.y << "," << vertices[v3Index].normal.z << ")\n";
         }
     }
 }
@@ -229,12 +160,13 @@ void drawHeightmap(std::vector<std::vector<double>>& heightmap, std::vector<floa
     shader.bind(); 
     glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(mvp)); 
     glBindVertexArray(terrainVAO); 
+
     // render the mesh triangle strip by triangle strip - each row at a time
     for (unsigned int strip = 0; strip < NUM_STRIPS; ++strip)
     {
         glDrawElements(GL_TRIANGLE_STRIP,   // primitive type
-            NUM_VERTS_PER_STRIP, // number of indices to render
-            GL_UNSIGNED_INT,     // index data type
+            NUM_VERTS_PER_STRIP,            // number of indices to render
+            GL_UNSIGNED_INT,                // index data type
             (void*)(sizeof(unsigned int) * NUM_VERTS_PER_STRIP * strip)); // offset to starting index 
     }
 }
