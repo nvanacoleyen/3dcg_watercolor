@@ -1,5 +1,4 @@
 #include "cell.h"
-#include "heightmap.h"
 #include "staggered_grid.h"
 #include "global_constants.h"
 #include "move_water.h"
@@ -15,6 +14,8 @@ DISABLE_WARNINGS_PUSH()
 #include <glm/vec3.hpp>
 // Library for loading an image
 #include <stb/stb_image.h>
+// Library for UI
+#include <imgui/imgui.h>
 DISABLE_WARNINGS_POP()
 #include <array>
 #include <framework/mesh.h>
@@ -35,67 +36,52 @@ bool waterBrush = true;
 bool colorBrush = false;
 bool isDragging = false;
 
-
 struct Light {
     glm::vec3 position;
     glm::vec3 color;
 };
-std::vector lights{ Light { glm::vec3(0, 0, 3), glm::vec3(1) } };
 
 bool calculate_watercolour = false;
 float brush_radius = 20;
-
-void updateColors(std::vector<paperVertex>& vertices, std::vector<Cell>& Grid, float& brush_radius, GLuint& VBO)
-{
-    // Color with/without water/pigment concentration
-    for (size_t i = 0; i < vertices.size(); i ++)
-    {   // For every vertex in the square:
-        glm::vec3 color; 
-        if (Grid[i].m_waterConc == 1 && Grid[i].m_pigmentConc == 0) {
-            color = glm::vec3(0.5);
-        }
-        else if (Grid[i].m_pigmentConc != 0) {
-            float pigment_factor = std::min(1.f, std::max(0.f, Grid[i].m_pigmentConc));
-            color = glm::vec3(0.5 - (0.5 * pigment_factor), 0.5 - (0.5 * pigment_factor), 0.5 + (0.5 * pigment_factor));
-        }
-        else {
-            color = vertices[i].color;
-        }
-        vertices[i].color = color;   
-    }
-}
-
 
 int main()
 {
     Window window{ "Watercolor", glm::ivec2(WIDTH, HEIGHT), OpenGLVersion::GL45 };
     Camera camera{ &window, glm::vec3(393.572052f, 290.958832f, 737.367920f), glm::vec3(0.00720430166f, 0.0117728803f, -0.999904811f) };
-    constexpr float fov = glm::pi<float>() / 4.0f;
-    constexpr float aspect = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
-    const glm::mat4 mainProjectionMatrix = glm::perspective(fov, aspect, 0.1f, 1000.0f);
-    float aspectRatio = window.getAspectRatio();
-    window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
 
-    glm::vec3 lightPos(800, 800, -1000);
+    constexpr float fov     = glm::pi<float>() / 4.0f;
+    constexpr float aspect  = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
+    const glm::mat4 mainProjectionMatrix = glm::perspective(fov, aspect, 0.1f, 1000.0f);
+    float aspectRatio       = window.getAspectRatio();
+
+    window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT); 
+    bool mouseMenu = false;
+
+    Light light = Light{ glm::vec3(800, 800, -1000), glm::vec3(1.0) };
 
     /* GENERATE HEIGHTMAP */
-    int octaves = 7;
-    double lucanarity = 2.1042;
-    double gain = 3;
+    int octaves             = 7;
+    double lucanarity       = 2.1042;
+    double gain             = 3;
 
-    Terrain paper(octaves, lucanarity, gain, HEIGHT, WIDTH, 0, 10);
+    float minHeight         = 0.f;
+    float maxHeight         = 2.f; 
+    float oldMaxHeight      = maxHeight; 
+    float maxHeightSlider   = 6 * maxHeight;
+    float heightRatio       = maxHeight / oldMaxHeight; 
+    Terrain paper(octaves, lucanarity, gain, HEIGHT, WIDTH, minHeight, maxHeight); 
 
     // Get references to variables paper
-    paperMesh &paper_mesh = paper.getMesh();  
+    paperMesh &paper_mesh   = paper.getMesh();  
     std::vector<std::vector<double>> &heightmap = paper.getHeightmap(); 
-    GLuint &paper_vao = paper.getVAO();
-    GLuint &paper_vbo = paper.getVBO();
+    GLuint &paper_vao       = paper.getVAO();
+    GLuint &paper_vbo       = paper.getVBO();
+    
 
     /* GENERATE GRID OF CELLS */
     Staggered_Grid x_velocity(WIDTH, HEIGHT, true);
     Staggered_Grid y_velocity(WIDTH, HEIGHT, false);
     std::vector<float> water_pressure(WIDTH * HEIGHT, 0.f);
-
     std::vector<Cell> Grid;
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
@@ -103,7 +89,7 @@ int main()
         }
     }
     
-    updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo);  
+    updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo);   
 
     // Key handle function
     window.registerKeyCallback([&](int key, int /* scancode */, int action, int /* mods */) {
@@ -185,6 +171,24 @@ int main()
         window.updateInput();
         camera.updateInput();
 
+        ImGui::Begin("Window");
+        ImGui::DragFloat("Max height paper", &maxHeight, 0.1f, 0.01f, maxHeightSlider, "MaxHeight: %.2f %%"); 
+        ImGui::DragFloat("LightPos.x", &light.position.x, 10, 0, 1500); 
+        ImGui::DragFloat("LightPos.y", &light.position.y, 10, 0, 1500);
+        ImGui::DragFloat("LightPos.z", &light.position.z, 10, -1500, 0);
+        ImGui::End();
+
+        heightRatio = maxHeight / oldMaxHeight;
+
+        /* If you drag menu slider, when released it will update vertices paper */
+        if (!ImGui::GetIO().WantCaptureMouse && mouseMenu == true) { 
+            paper.updateVertices(heightRatio); 
+            paper.updateBuffer();
+        }
+        /* If mouse uses menu, mouseMenu == true, else == false */
+        if (ImGui::GetIO().WantCaptureMouse) { mouseMenu = true; }
+        else { mouseMenu = false; }
+        
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -217,8 +221,9 @@ int main()
         paperShader.bind();
         {
             glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(mvp));
-            glUniform3fv(1, 1, glm::value_ptr(lightPos));    
-            paper.Render();
+            glUniform3fv(1, 1, glm::value_ptr(light.position));
+            glUniform3fv(2, 1, glm::value_ptr(light.color)); 
+            paper.Render(); 
         }
 
         glfwPollEvents();

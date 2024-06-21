@@ -15,10 +15,14 @@ void UpdateVelocities(std::vector<Cell>* M, Staggered_Grid* u, Staggered_Grid* v
 	for (int j = 0; j < HEIGHT - 1; j++) {
 		for (int i = 0; i < WIDTH - 1; i++) {
 			glm::vec2 pos = M->at((j * WIDTH) + i).m_position;
+
+			/* If out of bounds; continue */
 			if (pos.x >= WIDTH || pos.y >= HEIGHT) { continue; }
 
-			float u_delta_h = M->at((j * (WIDTH + 1)) + i + 1).m_position.z - M->at((j * (WIDTH + 1)) + i).m_position.z;
-			float v_delta_h = M->at(((j + 1) * WIDTH) + i).m_position.z - M->at((j * WIDTH) + i).m_position.z;
+			float u_delta_h = M->at((j * (WIDTH + 1)) + i + 1).m_position.z 
+							- M->at((j * (WIDTH + 1)) + i).m_position.z;
+			float v_delta_h = M->at(((j + 1) * WIDTH) + i).m_position.z 
+							- M->at((j * WIDTH) + i).m_position.z;
 
 			/* We add 1 to make it the boundary from this square to the next one. We wont go out of bounds becuse of the limits in the for loop. */
 			u->change_at_pos_by(i + 1, j, -u_delta_h);
@@ -26,10 +30,13 @@ void UpdateVelocities(std::vector<Cell>* M, Staggered_Grid* u, Staggered_Grid* v
 		}
 	}
 	
-	/* It is very important to remember that u has width + 1, and v has height + 1. When setting the new values for all this we must keep that in mind, along with that when we have position i+0.5 for u, this is ceil + 1*/
+	/* It is very important to remember that u has width + 1, and v has height + 1. 
+	When setting the new values for all this we must keep that in mind, 
+	along with that when we have position i+0.5 for u, this is ceil + 1*/
 	/*std::vector<float> new_u = u->get_data_values();
 	std::vector<float> new_v = v->get_data_values();*/
 
+	/* delta_t = size of 1 grid cell*/
 	float delta_t = 1 / std::max(1.f, ceil(std::max(u->max_value(), v->max_value())));
 	for (float t = 0.f; t < 1.f; t += delta_t) {
 
@@ -39,15 +46,32 @@ void UpdateVelocities(std::vector<Cell>* M, Staggered_Grid* u, Staggered_Grid* v
 
 		for (int j = 0; j < HEIGHT; j++) {
 			for (int i = 0; i < WIDTH; i++) {
-				float A = pow(u->get_at_pos(i, j), 2) - pow(u->get_at_pos(i + 1, j), 2) + (u->get_at_pos(i + 0.5f, j - 0.5f) * v->get_at_pos(i + 0.5f, j - 0.5f)) - (u->get_at_pos(i + 0.5f, j + 0.5f) * v->get_at_pos(i + 0.5f, j + 0.5f));
-				float B = u->get_at_pos(i + 1.5f, j) + u->get_at_pos(i - 0.5f, j) + u->get_at_pos(i + 0.5f, j + 1.f) + u->get_at_pos(i + 0.5f, j - 1.f) - 4 * u->get_at_pos(i + 0.5f, j);
-				new_u[j * (WIDTH + 1) + (i + 1)] = u->get_at_pos(i + 0.5f, j) + delta_t * (A - viscosity * B + get_from_grid(p, WIDTH, HEIGHT, i, j) - get_from_grid(p, WIDTH, HEIGHT, i + 1, j) - viscous_drag * u->get_at_pos(i + 0.5f, j));
+				float A = pow(u->get_at_pos(i, j), 2) 
+					- pow(u->get_at_pos(i + 1, j), 2) 
+					+ (u->get_at_pos(i + 0.5f, j - 0.5f) * v->get_at_pos(i + 0.5f, j - 0.5f))
+					- (u->get_at_pos(i + 0.5f, j + 0.5f) * v->get_at_pos(i + 0.5f, j + 0.5f));
+				float B = u->get_at_pos(i + 1.5f, j) 
+					+ u->get_at_pos(i - 0.5f, j) 
+					+ u->get_at_pos(i + 0.5f, j + 1.f) 
+					+ u->get_at_pos(i + 0.5f, j - 1.f) 
+					- 4 * u->get_at_pos(i + 0.5f, j);
+				new_u[j * (WIDTH + 1) + (i + 1)] = u->get_at_pos(i + 0.5f, j) 
+					+ delta_t * (A - viscosity * B + get_from_grid(p, WIDTH, HEIGHT, i, j) - get_from_grid(p, WIDTH, HEIGHT, i + 1, j) - viscous_drag * u->get_at_pos(i + 0.5f, j));
 
-				A = pow(v->get_at_pos(i, j), 2) - pow(v->get_at_pos(i, j + 1), 2) + (u->get_at_pos(i + 0.5, j - 0.5) * v->get_at_pos(i + 0.5, j - 0.5)) - (u->get_at_pos(i + 0.5, j + 0.5) * v->get_at_pos(i + 0.5, j + 0.5));
-				B = v->get_at_pos(i + 1, j + 0.5f) + v->get_at_pos(i - 0.5, j) + v->get_at_pos(i + 0.5, j + 1) + v->get_at_pos(i + 0.5, j - 1) - 4 * v->get_at_pos(i + 0.5, j);
-				new_v[(j + 1) * WIDTH + i] = v->get_at_pos(i, j + 0.5) + delta_t * (A - viscosity * B + get_from_grid(p, WIDTH, HEIGHT, i, j) - get_from_grid(p, WIDTH, HEIGHT, i, j + 1) - viscous_drag * v->get_at_pos(i, j + 0.5));
+				A = pow(v->get_at_pos(i, j), 2) 
+					- pow(v->get_at_pos(i, j + 1), 2) 
+					+ (u->get_at_pos(i + 0.5, j - 0.5) * v->get_at_pos(i + 0.5, j - 0.5)) 
+					- (u->get_at_pos(i + 0.5, j + 0.5) * v->get_at_pos(i + 0.5, j + 0.5));
+				B = v->get_at_pos(i + 1, j + 0.5f) 
+					+ v->get_at_pos(i - 0.5, j) 
+					+ v->get_at_pos(i + 0.5, j + 1) 
+					+ v->get_at_pos(i + 0.5, j - 1) 
+					- 4 * v->get_at_pos(i + 0.5, j);
+				new_v[(j + 1) * WIDTH + i] = v->get_at_pos(i, j + 0.5) 
+					+ delta_t * (A - viscosity * B + get_from_grid(p, WIDTH, HEIGHT, i, j) - get_from_grid(p, WIDTH, HEIGHT, i, j + 1) - viscous_drag * v->get_at_pos(i, j + 0.5));
 
-				/* Ok so my current problem is the positioning of all this, it is unclear if the grid goes to -0.5 or if the borders at position 0 just don't really exist. I think it probably treats position 0 as if it doesn't exist but we still need to discuss it somewhat. */
+				/* Ok so my current problem is the positioning of all this, it is unclear if the grid goes to -0.5 or if the borders at position 0 just don't really exist. 
+				I think it probably treats position 0 as if it doesn't exist but we still need to discuss it somewhat. */
 
 			}
 		}
@@ -55,7 +79,6 @@ void UpdateVelocities(std::vector<Cell>* M, Staggered_Grid* u, Staggered_Grid* v
 		v->set_new_data_values(new_v);
 		EnforceBoundaryConditions(M, u, v);
 	}
-	
 }
 
 /**

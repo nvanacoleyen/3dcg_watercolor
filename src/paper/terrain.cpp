@@ -37,21 +37,35 @@ void Terrain::normalizeHeightmap(double minRange, double maxRange) {
     double min_height = DBL_MAX;
     double max_height = -DBL_MAX;
 
-    for (const auto& row : m_heightMap) {
-        for (double height : row) {
+    /* Get current min and max height of heightmap */
+    for (auto& row : m_heightMap) {
+        for (double& height : row) {
             if (height < min_height) min_height = height;
             if (height > max_height) max_height = height;
         }
     }
-    //std::cout << "max_height: " << max_height << ", min_height: " << min_height << "\n";
+    /* The height it currently has */
     double height_delta = max_height - min_height;
+    /* The height I want it to be */
     double height_range = maxRange - minRange; 
 
+    /* Normalize heightmap */
     for (auto& row : m_heightMap) { 
         for (double& height : row) {
-            height = (height - min_height) / height_delta * height_range + minRange; 
+            height = (height - min_height) / height_delta;  
+            height = height * height_range + minRange;
         }
     }
+}
+
+void Terrain::updateVertices(float heightRatio)
+{
+    for (int y = 0; y < m_depth; y++) {
+        for (int x = 0; x < m_width; x++) {
+            m_mesh.vertices[y * m_width + x].position.z = m_heightMap[y][x] * heightRatio; 
+        }
+    }
+    calculateNormals();
 }
 
 void Terrain::createVertices()
@@ -124,12 +138,6 @@ void Terrain::calculateNormals()
         m_mesh.vertices[i1].normal = normal; 
         m_mesh.vertices[i2].normal = normal;  
 
-        //std::cout << "i0: " << i0 << ", i1: " << i1 << ", i2: " << i2 << "\n";
-        //std::cout << "pos0: (" << pos0.x << ", " << pos0.y << ", " << pos0.z << ")\n";
-        //std::cout << "pos1: (" << pos1.x << ", " << pos1.y << ", " << pos1.z << ")\n";
-        //std::cout << "pos2: (" << pos2.x << ", " << pos2.y << ", " << pos2.z << ")\n";
-        //std::cout << "normal: (" << normal.x << ", " << normal.y << ", " << normal.z << ")\n";
-
         normals[i0] += normal;
         normals[i1] += normal; 
         normals[i2] += normal; 
@@ -167,7 +175,7 @@ void Terrain::createGLState()
     glEnableVertexArrayAttrib(m_vao, 2);
 }
 
-void Terrain::updateBuffer()
+void Terrain::updateBuffer() 
 {
     glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, m_mesh.vertices.size() * sizeof(paperVertex), m_mesh.vertices.data());  

@@ -50,6 +50,7 @@ public:
 
 	void createVertices();  
 	void createTriangles();
+	void updateVertices(float heightRatio);
 
 	void calculateNormals();  
 

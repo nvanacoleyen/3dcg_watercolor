@@ -7,6 +7,7 @@ in vec3 fragNormal;
 in vec3 ourColor;
 
 layout(location = 1) uniform vec3 lightPos;
+layout(location = 2) uniform vec3 lightColor;
 
 float normDot(vec3 N, vec3 L)
 {

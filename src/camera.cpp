@@ -5,6 +5,7 @@ DISABLE_WARNINGS_PUSH()
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <imgui/imgui.h>
 DISABLE_WARNINGS_POP()
 
 Camera::Camera(Window* pWindow)
@@ -75,11 +76,13 @@ void Camera::updateInput()
         const glm::vec2 delta = lookSpeed * glm::vec2(cursorPos - m_prevCursorPos);
         m_prevCursorPos = cursorPos;
 
-        if (m_pWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT)) {
-            if (delta.x != 0.0f)
-                rotateY(delta.x);
-            if (delta.y != 0.0f)
-                rotateX(delta.y);
+        if (!ImGui::GetIO().WantCaptureMouse) {
+            if (m_pWindow->isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT)) {
+                if (delta.x != 0.0f)
+                    rotateY(delta.x);
+                if (delta.y != 0.0f)
+                    rotateX(delta.y);
+            }
         }
     }
     else {

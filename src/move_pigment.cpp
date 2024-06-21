@@ -40,3 +40,23 @@ void movePigment(std::vector<Cell>* Grid, Staggered_Grid* u, Staggered_Grid* v)
 
 	//return new_Grid;
 }
+
+void updateColors(std::vector<paperVertex>& vertices, std::vector<Cell>& Grid, float& brush_radius, GLuint& VBO)
+{
+	// Color with/without water/pigment concentration
+	for (size_t i = 0; i < vertices.size(); i++)
+	{   // For every vertex in the square:
+		glm::vec3 color;
+		if (Grid[i].m_waterConc == 1 && Grid[i].m_pigmentConc == 0) {
+			color = glm::vec3(0.5);
+		}
+		else if (Grid[i].m_pigmentConc != 0) {
+			float pigment_factor = std::min(1.f, std::max(0.f, Grid[i].m_pigmentConc));
+			color = glm::vec3(0.5 - (0.5 * pigment_factor), 0.5 - (0.5 * pigment_factor), 0.5 + (0.5 * pigment_factor));
+		}
+		else {
+			color = vertices[i].color;
+		}
+		vertices[i].color = color;
+	}
+}
