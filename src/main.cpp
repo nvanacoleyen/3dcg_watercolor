@@ -31,10 +31,14 @@ DISABLE_WARNINGS_POP()
 #include <vector>
 #include <memory> 
 
+/* Toggles for all the functionality */
 bool cursorCircle = true;
 bool waterBrush = true;
 bool colorBrush = false;
 bool isDragging = false;
+bool move_water_toggle = true;
+bool move_pigment_toggle = true;
+bool sim_capillaryflow_toggle = true;
 
 struct Light {
     glm::vec3 position;
@@ -176,6 +180,10 @@ int main()
         ImGui::DragFloat("LightPos.x", &light.position.x, 10, 0, 1500); 
         ImGui::DragFloat("LightPos.y", &light.position.y, 10, 0, 1500);
         ImGui::DragFloat("LightPos.z", &light.position.z, 10, -1500, 0);
+        ImGui::Checkbox("Play/Pause watercolour calculation", &calculate_watercolour);
+        ImGui::Checkbox("Enable movement of water", &move_water_toggle);
+        ImGui::Checkbox("Enable movement of pigment", &move_pigment_toggle);
+        ImGui::Checkbox("Enable simulation of capillary flow", &sim_capillaryflow_toggle);
         ImGui::End();
 
         heightRatio = maxHeight / oldMaxHeight;
@@ -196,14 +204,20 @@ int main()
 
         /* You toggle these by pressing enter. */
         if (calculate_watercolour) {
-            /* Move water functions. */
-            UpdateVelocities(&Grid, &x_velocity, &y_velocity, &water_pressure);
-            RelaxDivergence(&x_velocity, &y_velocity, &water_pressure);
-            FlowOutward(&Grid, &water_pressure);
+            if (move_water_toggle) {
+                /* Move water functions. */
+                UpdateVelocities(&Grid, &x_velocity, &y_velocity, &water_pressure);
+                RelaxDivergence(&x_velocity, &y_velocity, &water_pressure);
+                FlowOutward(&Grid, &water_pressure);
+            }
+            if (move_pigment_toggle) {
+                /* Pigment functions */
+                movePigment(&Grid, &x_velocity, &y_velocity);
+                updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo); 
+            }
+            
         
-            /* Pigment functions */
-            movePigment(&Grid, &x_velocity, &y_velocity);
-            updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo);  
+             
         }
         /* Brush function */
         else if (isDragging) {
