@@ -65,6 +65,10 @@ public:
 	GLuint& getVBO();
 	GLuint& getIBO();
 
+	float octaves;
+	float lucanarity;
+	float gain;
+
 	float minHeight = 0;
 	float maxHeight = 0;
 	float oldMaxHeight = 0;  

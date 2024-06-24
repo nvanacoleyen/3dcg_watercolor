@@ -1,7 +1,8 @@
 #include "terrain.h"
 
 Terrain::Terrain(double octaves, double lucanarity, double gain, int depth, int width, double minHeight, double maxHeight)
-    : m_depth(depth), m_width(width), minHeight(minHeight), maxHeight(maxHeight), oldMaxHeight(maxHeight) 
+    : m_depth(depth), m_width(width), minHeight(minHeight), maxHeight(maxHeight), oldMaxHeight(maxHeight),
+      octaves(octaves), lucanarity(lucanarity), gain(gain)
 {
     m_heightMap = std::vector<std::vector<double>>(depth, std::vector<double>(width)); 
     GLuint m_vao, m_vbo, m_ibo; 
