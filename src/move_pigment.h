@@ -10,6 +10,6 @@
 
 
 void movePigment(std::vector<Cell>* Grid, Staggered_Grid* u, Staggered_Grid* v);
-void updateColors(std::vector<paperVertex>& vertices, std::vector<Cell>& Grid, float& brush_radius, GLuint& VBO);      
+void updateColors(std::vector<paperVertex>& vertices, std::vector<Cell>& Grid, float& brush_radius, GLuint& VBO, const char* colour_mode, Staggered_Grid* u, Staggered_Grid* v, std::vector<float>* p);
 
 #endif // !MOVE_PIGMENT_H

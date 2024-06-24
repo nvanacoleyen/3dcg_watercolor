@@ -181,6 +181,20 @@ float Staggered_Grid::get_at_pos(float x, float y)
 	// return 0.0f; This is never reached anyway 
 }
 
+float Staggered_Grid::get_from_total(int pos)
+{
+	if (x_axis) {
+		int x = pos % (width - 1);
+		int y = pos / (width - 1);
+		return get_at_pos(x, y);
+	}
+	else {
+		int x = pos % width;
+		int y = pos / width;
+		return get_at_pos(x, y);
+	}
+}
+
 /**
  * A function used to zero the boundaries on both ends of the given index coordinates.
  */

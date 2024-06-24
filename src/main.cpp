@@ -45,6 +45,11 @@ bool FlowOutward_toggle = true;
 bool move_pigment_toggle = true;
 bool sim_capillaryflow_toggle = true;
 
+const char* dropdown_items[] = {"Pigment", "Water velocity", "X Water velocity", "Y Water velocity", "Water pressure"};
+static const char* current_item = "Pigment";
+
+
+
 struct Light {
     glm::vec3 position;
     glm::vec3 color;
@@ -101,7 +106,7 @@ int main()
     /* Just a counter for us to see in the debug menu */
     int iteration_count = 0;
     
-    updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo);   
+    updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo, current_item, nullptr, nullptr, nullptr);
 
     // Key handle function
     window.registerKeyCallback([&](int key, int /* scancode */, int action, int /* mods */) {
@@ -188,15 +193,29 @@ int main()
         ImGui::DragFloat("LightPos.x", &light.position.x, 10, 0, 1500); 
         ImGui::DragFloat("LightPos.y", &light.position.y, 10, 0, 1500);
         ImGui::DragFloat("LightPos.z", &light.position.z, 10, -1500, 0);
+
+        if (ImGui::BeginCombo("Display mode", current_item)) // The second parameter is the label previewed before opening the combo.
+        {
+            for (int n = 0; n < 5; n++)
+            {
+                bool is_selected = (current_item == dropdown_items[n]); // You can store your selection however you want, outside or inside your objects
+                if (ImGui::Selectable(dropdown_items[n], is_selected)) {
+                    current_item = dropdown_items[n];
+                    updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo, current_item, &x_velocity, &y_velocity, &water_pressure);
+                }
+                if (is_selected) {
+                    ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+                }
+            }
+            ImGui::EndCombo();
+        }
+
         ImGui::Checkbox("Play/Pause watercolour calculation", &calculate_watercolour);
-        //ImGui::Checkbox("Enable movement of water", &move_water_toggle);
         ImGui::Checkbox("Enable UpdateVelocities water", &UpdateVelocities_toggle);
         ImGui::Checkbox("Enable RelaxDivergence water", &RelaxDivergence_toggle);
         ImGui::Checkbox("Enable FlowOutward water", &FlowOutward_toggle);
-
-
         ImGui::Checkbox("Enable movement of pigment", &move_pigment_toggle);
-        ImGui::Checkbox("Enable simulation of capillary flow", &sim_capillaryflow_toggle);
+
         ImGui::End();
 
         heightRatio = maxHeight / oldMaxHeight;
@@ -241,7 +260,7 @@ int main()
                 movePigment(&Grid, &x_velocity, &y_velocity);
             }
 
-            updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo); 
+            updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo, current_item, &x_velocity, &y_velocity, &water_pressure); 
 
             iteration_count++;
             printf("iteration %d done\n", iteration_count);
@@ -250,7 +269,7 @@ int main()
         /* Brush function */
         else if (isDragging) {
             glm::vec2 cursorPosition = window.getCursorPos() / window.getDpiScalingFactor();
-            updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo);  
+            updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo, current_item, &x_velocity, &y_velocity, &water_pressure);
             
         }
 
