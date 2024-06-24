@@ -93,10 +93,15 @@ void updateColors(std::vector<paperVertex>& vertices, std::vector<Cell>& Grid, f
 
 		}
 		else if (strcmp(colour_mode, "Water pressure") == 0) {
-			float pressure_factor = std::min(1.f, std::max(0.f, p->at(i)));
-			glm::vec3 color = glm::vec3(pressure_factor);
-			
-			vertices[i].color = color;
+			if (Grid[i].m_waterConc == 0) {
+				vertices[i].color = glm::vec3(0.3);
+			}
+			else {
+				float pressure_factor = (std::min(10.f, std::max(-10.f, p->at(i))) + 10) / 20;
+				glm::vec3 color = glm::vec3(pressure_factor);
+
+				vertices[i].color = color;
+			}
 		}
 		// The default other option is pigment mode.
 		else {
