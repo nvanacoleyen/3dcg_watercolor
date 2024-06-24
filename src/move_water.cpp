@@ -150,7 +150,7 @@ void RelaxDivergence(Staggered_Grid* u, Staggered_Grid* v, std::vector<float>* p
 void FlowOutward(std::vector<Cell>* M, std::vector<float>* p)
 {
 	/* Constants for the function */
-	float eta = 0.01f;
+	float eta = 0.05f;
 	int kernel_size = 3;
 
 	std::vector<Cell> gaussianGrid = GaussianCellFilter(M, kernel_size);
