@@ -48,15 +48,6 @@ bool sim_capillaryflow_toggle = true;
 const char* dropdown_items[] = {"Pigment", "Water velocity", "X Water velocity", "Y Water velocity", "Water pressure"};
 static const char* current_item = "Pigment";
 
-
-
-bool UpdateVelocities_toggle = true;
-bool RelaxDivergence_toggle = true;
-bool FlowOutward_toggle = true;
-
-bool move_pigment_toggle = true;
-bool sim_capillaryflow_toggle = true;
-
 bool updateHeightmap = false;
 
 struct Light {
@@ -220,7 +211,7 @@ int main()
                 bool is_selected = (current_item == dropdown_items[n]); // You can store your selection however you want, outside or inside your objects
                 if (ImGui::Selectable(dropdown_items[n], is_selected)) {
                     current_item = dropdown_items[n];
-                    updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo, current_item, &x_velocity, &y_velocity, &water_pressure);
+                    updateColors(papers[currentPreset].getMesh().vertices, papers[currentPreset].Grid, brush_radius, papers[currentPreset].getVBO(), current_item, &x_velocity, &y_velocity, &water_pressure);
                 }
                 if (is_selected) {
                     ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
@@ -292,7 +283,7 @@ int main()
                 /* Pigment functions */
                 movePigment(&papers[currentPreset].Grid, &x_velocity, &y_velocity);
             }
-            updateColors(papers[currentPreset].getMesh().vertices, papers[currentPreset].Grid, brush_radius, papers[currentPreset].getVBO());
+            updateColors(papers[currentPreset].getMesh().vertices, papers[currentPreset].Grid, brush_radius, papers[currentPreset].getVBO(), current_item, &x_velocity, &y_velocity, &water_pressure);
 
             iteration_count++;
             printf("iteration %d done\n", iteration_count);
@@ -300,7 +291,7 @@ int main()
         /* Brush function */
         else if (isDragging) {
             glm::vec2 cursorPosition = window.getCursorPos() / window.getDpiScalingFactor();
-            updateColors(papers[currentPreset].getMesh().vertices, papers[currentPreset].Grid, brush_radius, papers[currentPreset].getVBO());
+            updateColors(papers[currentPreset].getMesh().vertices, papers[currentPreset].Grid, brush_radius, papers[currentPreset].getVBO(), current_item, &x_velocity, &y_velocity, &water_pressure);
         }
 
         // Update the buffer data 
