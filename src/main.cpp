@@ -31,10 +31,21 @@ DISABLE_WARNINGS_POP()
 #include <vector>
 #include <memory> 
 
+/* Toggles for all the functionality */
 bool cursorCircle = true;
 bool waterBrush = true;
 bool colorBrush = false;
 bool isDragging = false;
+bool move_water_toggle = true;
+
+bool UpdateVelocities_toggle = true;
+bool RelaxDivergence_toggle = true;
+bool FlowOutward_toggle = true;
+
+bool move_pigment_toggle = true;
+bool sim_capillaryflow_toggle = true;
+
+bool updateHeightmap = false;
 
 struct Light {
     glm::vec3 position;
@@ -49,34 +60,34 @@ int main()
     Window window{ "Watercolor", glm::ivec2(WIDTH, HEIGHT), OpenGLVersion::GL45 };
     Camera camera{ &window, glm::vec3(393.572052f, 290.958832f, 737.367920f), glm::vec3(0.00720430166f, 0.0117728803f, -0.999904811f) };
 
-    constexpr float fov     = glm::pi<float>() / 4.0f;
-    constexpr float aspect  = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
+    constexpr float fov = glm::pi<float>() / 4.0f;
+    constexpr float aspect = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
     const glm::mat4 mainProjectionMatrix = glm::perspective(fov, aspect, 0.1f, 1000.0f);
-    float aspectRatio       = window.getAspectRatio();
+    float aspectRatio = window.getAspectRatio();
 
-    window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT); 
+    window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
     bool mouseMenu = false;
 
     /* Create lightsource */
     Light light = Light{ glm::vec3(800, 800, -1000), glm::vec3(1.0) };
 
     /* GENERATE HEIGHTMAP */
-    std::vector<double> paperPresets[] = { 
+    std::vector<double> paperPresets[] = {
         { 7.0, 2.1, 3.0, 2.0 }, // Preset 1 (octaves, lucanarity, gain, maxHeight)
         { 6.0, 3.0, 2.0, 5.0 }, // Preset 2
         { 5.0, 3.5, 1.0, 5.0 }  // Preset 3 
     };
     int currentPreset = 0;
 
-    float minHeight         = 0.f;
-    float maxHeightSlider   = 6 * paperPresets[0][3];
-    float heightRatio       = 1;
+    float minHeight = 0.f;
+    float maxHeightSlider = 6 * paperPresets[0][3];
+    float heightRatio = 1;
     Terrain paper1(paperPresets[0][0], paperPresets[0][1], paperPresets[0][2], HEIGHT, WIDTH, minHeight, paperPresets[0][3]);
     Terrain paper2(paperPresets[1][0], paperPresets[1][1], paperPresets[1][2], HEIGHT, WIDTH, minHeight, paperPresets[1][3]);
-    Terrain paper3(paperPresets[2][0], paperPresets[2][1], paperPresets[2][2], HEIGHT, WIDTH, minHeight, paperPresets[2][3]); 
-    std::vector<Terrain> papers{ paper1, paper2, paper3 }; 
+    Terrain paper3(paperPresets[2][0], paperPresets[2][1], paperPresets[2][2], HEIGHT, WIDTH, minHeight, paperPresets[2][3]);
+    std::vector<Terrain> papers{ paper1, paper2, paper3 };
     //Terrain& currentPaper = papers[currentPreset];  
-    
+
 
     /* GENERATE GRID OF CELLS */
     Staggered_Grid x_velocity(WIDTH, HEIGHT, true);
@@ -86,11 +97,14 @@ int main()
     for (auto& paper : papers) {
         for (int j = 0; j < HEIGHT; j++) {
             for (int i = 0; i < WIDTH; i++) {
-                paper.Grid.push_back(Cell(glm::vec3(i, j, paper.getHeightmap()[j][i]), 1));  
+                paper.Grid.push_back(Cell(glm::vec3(i, j, paper.getHeightmap()[j][i]), 1));
             }
         }
     }
-    
+
+    /* Just a counter for us to see in the debug menu */
+    int iteration_count = 0;
+
     //updateColors(papers[0].getMesh().vertices, Grid, brush_radius, papers[0].getVBO()); 
 
     // Key handle function
@@ -120,7 +134,7 @@ int main()
         default:
             break;
         };
-    });
+        });
 
     window.registerMouseButtonCallback([&](int button, int action, int mods) {
 
@@ -132,7 +146,7 @@ int main()
                 isDragging = false;
             }
         }
-    });
+        });
 
     /* SHADERS */
     const Shader paperShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/paper_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/paper_frag.glsl").build();
@@ -153,7 +167,7 @@ int main()
                     /* IF not outside the range of */
                     if (j < HEIGHT && i < WIDTH && j >= 0 && i >= 0) {
                         float dist = sqrt(pow(i - cursorPosition.x, 2) + pow(j - cursorPosition.y, 2));
-                        
+
                         if (dist <= brush_radius) {
                             /* When using waterbrush */
                             if (waterBrush) {
@@ -168,7 +182,7 @@ int main()
                 }
             }
         }
-    });
+        });
 
     // Main loop
     while (!window.shouldClose()) {
@@ -177,16 +191,34 @@ int main()
 
         ImGui::Begin("Window");
         ImGui::DragFloat("Max height paper", &papers[currentPreset].maxHeight, 0.1f, 0.01f, maxHeightSlider, "MaxHeight: %.2f %%");
-        ImGui::DragInt("Paper presets", &currentPreset, 0.01, 0, 2); 
-        ImGui::DragFloat("LightPos.x", &light.position.x, 10, 0, 1500);   
+        ImGui::DragInt("Paper presets", &currentPreset, 0.01, 0, 2);
+        if (ImGui::DragFloat("Octaves", &(papers[currentPreset].octaves), 1, 5, 8) ||
+            ImGui::DragFloat("Lucanarity", &papers[currentPreset].lucanarity, 0.1, 1.5, 3.0) ||
+            ImGui::DragFloat("Gain", &papers[currentPreset].gain, 0.2, 2.0, 4.0))
+        {
+            updateHeightmap = true;
+        }
+        ImGui::DragFloat("LightPos.x", &light.position.x, 10, 0, 1500);
         ImGui::DragFloat("LightPos.y", &light.position.y, 10, 0, 1500);
-        ImGui::DragFloat("LightPos.z", &light.position.z, 10, -1500, 0); 
-        ImGui::End(); 
+        ImGui::DragFloat("LightPos.z", &light.position.z, 10, -1500, 0);
+        ImGui::Checkbox("Play/Pause watercolour calculation", &calculate_watercolour);
+        //ImGui::Checkbox("Enable movement of water", &move_water_toggle);
+        ImGui::Checkbox("Enable UpdateVelocities water", &UpdateVelocities_toggle);
+        ImGui::Checkbox("Enable RelaxDivergence water", &RelaxDivergence_toggle);
+        ImGui::Checkbox("Enable FlowOutward water", &FlowOutward_toggle);
+        ImGui::Checkbox("Enable movement of pigment", &move_pigment_toggle);
+        ImGui::Checkbox("Enable simulation of capillary flow", &sim_capillaryflow_toggle);
+        ImGui::End();
 
-        heightRatio = papers[currentPreset].maxHeight / papers[currentPreset].oldMaxHeight; 
+        heightRatio = papers[currentPreset].maxHeight / papers[currentPreset].oldMaxHeight;
 
         /* If you drag menu slider, when released it will update vertices paper */
-        if (!ImGui::GetIO().WantCaptureMouse && mouseMenu == true) { 
+        if (!ImGui::GetIO().WantCaptureMouse && mouseMenu == true) {
+            if (updateHeightmap == true) {
+                papers[currentPreset].generateHeightmap(papers[currentPreset].octaves, papers[currentPreset].lucanarity,
+                    papers[currentPreset].gain, papers[currentPreset].minHeight, papers[currentPreset].maxHeight);
+                updateHeightmap = false;
+            }
             /* Update vertices and buffer of current paper*/
             papers[currentPreset].updateVertices(papers[currentPreset].maxHeight, heightRatio);
             papers[currentPreset].updateBuffer();
@@ -200,22 +232,36 @@ int main()
         /* If mouse uses menu, mouseMenu == true, else == false */
         if (ImGui::GetIO().WantCaptureMouse) { mouseMenu = true; }
         else { mouseMenu = false; }
-        
+
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // Enable color writes. 
 
         /* You toggle these by pressing enter. */
-        if (calculate_watercolour) { 
-            /* Move water functions. */
-            UpdateVelocities(&papers[currentPreset].Grid, &x_velocity, &y_velocity, &water_pressure);
-            RelaxDivergence(&x_velocity, &y_velocity, &water_pressure);
-            FlowOutward(&papers[currentPreset].Grid, &water_pressure);
-        
-            /* Pigment functions */
-            movePigment(&papers[currentPreset].Grid, &x_velocity, &y_velocity);
+        if (calculate_watercolour) {
+
+            if (UpdateVelocities_toggle) {
+                /* Move water functions. */
+                UpdateVelocities(&papers[currentPreset].Grid, &x_velocity, &y_velocity, &water_pressure);
+
+            }
+            if (RelaxDivergence_toggle) {
+                /* Move water functions. */
+                RelaxDivergence(&x_velocity, &y_velocity, &water_pressure);
+            }
+            if (FlowOutward_toggle) {
+                /* Move water functions. */
+                FlowOutward(&papers[currentPreset].Grid, &water_pressure);
+            }
+            if (move_pigment_toggle) {
+                /* Pigment functions */
+                movePigment(&papers[currentPreset].Grid, &x_velocity, &y_velocity);
+            }
             updateColors(papers[currentPreset].getMesh().vertices, papers[currentPreset].Grid, brush_radius, papers[currentPreset].getVBO());
+
+            iteration_count++;
+            printf("iteration %d done\n", iteration_count);
         }
         /* Brush function */
         else if (isDragging) {
@@ -225,7 +271,7 @@ int main()
 
         // Update the buffer data 
         papers[currentPreset].updateBuffer();
-         
+
         const glm::mat4 mvp = mainProjectionMatrix * camera.viewMatrix();
 
         /* RENDER PAPER */
@@ -233,7 +279,7 @@ int main()
         {
             glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(mvp));
             glUniform3fv(1, 1, glm::value_ptr(light.position));
-            glUniform3fv(2, 1, glm::value_ptr(light.color)); 
+            glUniform3fv(2, 1, glm::value_ptr(light.color));
             papers[currentPreset].Render();
         }
 
