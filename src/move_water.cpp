@@ -92,8 +92,8 @@ void EnforceBoundaryConditions(std::vector<Cell>* M, Staggered_Grid* u, Staggere
 	for (int i = 0; i < M->size(); i++) {
 		Cell* cell = &(M->at(i));
 
-		/* If the cell is not wet, we zero the surrounding velocities. We have a tiny buffer for what exactly is 'not wet'. */
-		if (cell->m_waterConc < 0.99f) {
+		/* If the cell is not wet, we zero the surrounding velocities. We have a buffer for what exactly is 'not wet'. */
+		if (cell->m_waterConc < 0.2f) {
 			u->zero_at_pos(cell->m_position.x, cell->m_position.y);
 			v->zero_at_pos(cell->m_position.x, cell->m_position.y);
 		}
