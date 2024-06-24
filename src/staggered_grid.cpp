@@ -215,7 +215,7 @@ float Staggered_Grid::max_value()
 {
 	float max_value = std::numeric_limits<float>::min();
 	for (int i = 0; i < data_values.size(); i++) {
-		max_value = std::max(max_value, data_values.at(i));
+		max_value = std::max(max_value, std::abs(data_values.at(i)));
 	}
 	return max_value;
 }
@@ -224,7 +224,7 @@ float Staggered_Grid::min_value()
 {
 	float min_value = std::numeric_limits<float>::max();
 	for (int i = 0; i < data_values.size(); i++) {
-		min_value = std::min(min_value, data_values.at(i));
+		min_value = std::min(min_value, std::abs(data_values.at(i)));
 	}
 	return min_value;
 }

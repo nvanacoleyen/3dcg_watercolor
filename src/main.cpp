@@ -37,6 +37,11 @@ bool waterBrush = true;
 bool colorBrush = false;
 bool isDragging = false;
 bool move_water_toggle = true;
+
+bool UpdateVelocities_toggle = true;
+bool RelaxDivergence_toggle = true;
+bool FlowOutward_toggle = true;
+
 bool move_pigment_toggle = true;
 bool sim_capillaryflow_toggle = true;
 
@@ -92,6 +97,9 @@ int main()
             Grid.push_back(Cell(glm::vec3(i, j, heightmap[j][i]), 1));
         }
     }
+
+    /* Just a counter for us to see in the debug menu */
+    int iteration_count = 0;
     
     updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo);   
 
@@ -181,7 +189,12 @@ int main()
         ImGui::DragFloat("LightPos.y", &light.position.y, 10, 0, 1500);
         ImGui::DragFloat("LightPos.z", &light.position.z, 10, -1500, 0);
         ImGui::Checkbox("Play/Pause watercolour calculation", &calculate_watercolour);
-        ImGui::Checkbox("Enable movement of water", &move_water_toggle);
+        //ImGui::Checkbox("Enable movement of water", &move_water_toggle);
+        ImGui::Checkbox("Enable UpdateVelocities water", &UpdateVelocities_toggle);
+        ImGui::Checkbox("Enable RelaxDivergence water", &RelaxDivergence_toggle);
+        ImGui::Checkbox("Enable FlowOutward water", &FlowOutward_toggle);
+
+
         ImGui::Checkbox("Enable movement of pigment", &move_pigment_toggle);
         ImGui::Checkbox("Enable simulation of capillary flow", &sim_capillaryflow_toggle);
         ImGui::End();
@@ -204,19 +217,34 @@ int main()
 
         /* You toggle these by pressing enter. */
         if (calculate_watercolour) {
-            if (move_water_toggle) {
+            //if (move_water_toggle) {
+            //    /* Move water functions. */
+            //    UpdateVelocities(&Grid, &x_velocity, &y_velocity, &water_pressure);
+            //    RelaxDivergence(&x_velocity, &y_velocity, &water_pressure);
+            //    FlowOutward(&Grid, &water_pressure);
+            //}
+            if (UpdateVelocities_toggle) {
                 /* Move water functions. */
                 UpdateVelocities(&Grid, &x_velocity, &y_velocity, &water_pressure);
+            }
+            if (RelaxDivergence_toggle) {
+                /* Move water functions. */
                 RelaxDivergence(&x_velocity, &y_velocity, &water_pressure);
+            }
+            if (FlowOutward_toggle) {
+                /* Move water functions. */
                 FlowOutward(&Grid, &water_pressure);
             }
+
             if (move_pigment_toggle) {
                 /* Pigment functions */
                 movePigment(&Grid, &x_velocity, &y_velocity);
-                updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo); 
             }
-            
-        
+
+            updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo); 
+
+            iteration_count++;
+            printf("iteration %d done\n", iteration_count);
              
         }
         /* Brush function */

@@ -16,16 +16,22 @@ void movePigment(std::vector<Cell>* Grid, Staggered_Grid* u, Staggered_Grid* v)
 		/* Loop through all cells and adjust pigments */
 		for (int j = 1; j < HEIGHT - 1; j++) {
 			for (int i = 1; i < WIDTH - 1; i++) {
+				if (current_Grid[WIDTH * j + i].m_pigmentConc > 0 && u->get_at_pos(i + 0.5, j) > 0) {
+					float bruh1 = u->get_at_pos(i + 0.5, j);
+					float bruh2 = -u->get_at_pos(i - 0.5, j);
+					float bruh3 = v->get_at_pos(i, j + 0.5);
+					float bruh4 = -v->get_at_pos(i, j - 0.5);
+				}
 
-				new_Grid[WIDTH * j + (i+1)].m_pigmentConc += std::max(0.f, (u->get_at_pos(i + 0.5, j) * current_Grid[WIDTH * j + i].m_pigmentConc));
-				new_Grid[WIDTH * j + (i-1)].m_pigmentConc += std::max(0.f, (-u->get_at_pos(i - 0.5, j) * current_Grid[WIDTH * j + i].m_pigmentConc));
-				new_Grid[WIDTH * (j+1) + i].m_pigmentConc += std::max(0.f, (v->get_at_pos(i, j + 0.5) * current_Grid[WIDTH * j + i].m_pigmentConc));
-				new_Grid[WIDTH * (j-1) + i].m_pigmentConc += std::max(0.f, (-v->get_at_pos(i, j - 0.5) * current_Grid[WIDTH * j + i].m_pigmentConc));
+				new_Grid[WIDTH * j + (i+1)].m_pigmentConc += delta_t * std::max(0.f, (u->get_at_pos(i + 0.5, j) * current_Grid[WIDTH * j + i].m_pigmentConc));
+				new_Grid[WIDTH * j + (i-1)].m_pigmentConc += delta_t * std::max(0.f, (-u->get_at_pos(i - 0.5, j) * current_Grid[WIDTH * j + i].m_pigmentConc));
+				new_Grid[WIDTH * (j+1) + i].m_pigmentConc += delta_t * std::max(0.f, (v->get_at_pos(i, j + 0.5) * current_Grid[WIDTH * j + i].m_pigmentConc));
+				new_Grid[WIDTH * (j-1) + i].m_pigmentConc += delta_t * std::max(0.f, (-v->get_at_pos(i, j - 0.5) * current_Grid[WIDTH * j + i].m_pigmentConc));
 
-				new_Grid[WIDTH * j + i].m_pigmentConc -= std::max(0.f, (u->get_at_pos(i + 0.5, j) * current_Grid[WIDTH * j + i].m_pigmentConc)) +
+				new_Grid[WIDTH * j + i].m_pigmentConc -= delta_t * (std::max(0.f, (u->get_at_pos(i + 0.5, j) * current_Grid[WIDTH * j + i].m_pigmentConc)) +
 														  std::max(0.f, (-u->get_at_pos(i - 0.5, j) * current_Grid[WIDTH * j + i].m_pigmentConc)) +
 														  std::max(0.f, (v->get_at_pos(i, j + 0.5) * current_Grid[WIDTH * j + i].m_pigmentConc)) +
-														  std::max(0.f, (-v->get_at_pos(i, j - 0.5) * current_Grid[WIDTH * j + i].m_pigmentConc));
+														  std::max(0.f, (-v->get_at_pos(i, j - 0.5) * current_Grid[WIDTH * j + i].m_pigmentConc)));
 
 				new_Grid[WIDTH * j + i].m_pigmentConc = std::max(0.f, new_Grid[WIDTH * j + i].m_pigmentConc);
 
@@ -48,11 +54,11 @@ void updateColors(std::vector<paperVertex>& vertices, std::vector<Cell>& Grid, f
 	{   // For every vertex in the square:
 		glm::vec3 color;
 		if (Grid[i].m_waterConc == 1 && Grid[i].m_pigmentConc == 0) {
-			color = glm::vec3(0.5);
+			color = glm::vec3(0.8);
 		}
-		else if (Grid[i].m_pigmentConc != 0) {
+		else if (Grid[i].m_pigmentConc > 0.0005) {
 			float pigment_factor = std::min(1.f, std::max(0.f, Grid[i].m_pigmentConc));
-			color = glm::vec3(0.5 - (0.5 * pigment_factor), 0.5 - (0.5 * pigment_factor), 0.5 + (0.5 * pigment_factor));
+			color = glm::vec3(std::max(0.0, 0.65 - (1.2 * pigment_factor)), std::max(0.0, 0.65 - (1.2 * pigment_factor)), 0.8 + (0.2 * pigment_factor));
 		}
 		else {
 			color = vertices[i].color;
