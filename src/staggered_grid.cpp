@@ -181,6 +181,20 @@ float Staggered_Grid::get_at_pos(float x, float y)
 	// return 0.0f; This is never reached anyway 
 }
 
+float Staggered_Grid::get_from_total(int pos)
+{
+	if (x_axis) {
+		int x = pos % (width - 1);
+		int y = pos / (width - 1);
+		return get_at_pos(x, y);
+	}
+	else {
+		int x = pos % width;
+		int y = pos / width;
+		return get_at_pos(x, y);
+	}
+}
+
 /**
  * A function used to zero the boundaries on both ends of the given index coordinates.
  */
@@ -215,7 +229,7 @@ float Staggered_Grid::max_value()
 {
 	float max_value = std::numeric_limits<float>::min();
 	for (int i = 0; i < data_values.size(); i++) {
-		max_value = std::max(max_value, data_values.at(i));
+		max_value = std::max(max_value, std::abs(data_values.at(i)));
 	}
 	return max_value;
 }
@@ -224,7 +238,7 @@ float Staggered_Grid::min_value()
 {
 	float min_value = std::numeric_limits<float>::max();
 	for (int i = 0; i < data_values.size(); i++) {
-		min_value = std::min(min_value, data_values.at(i));
+		min_value = std::min(min_value, std::abs(data_values.at(i)));
 	}
 	return min_value;
 }

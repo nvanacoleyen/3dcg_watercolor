@@ -45,6 +45,18 @@ bool FlowOutward_toggle = true;
 bool move_pigment_toggle = true;
 bool sim_capillaryflow_toggle = true;
 
+const char* dropdown_items[] = {"Pigment", "Water velocity", "X Water velocity", "Y Water velocity", "Water pressure"};
+static const char* current_item = "Pigment";
+
+
+
+bool UpdateVelocities_toggle = true;
+bool RelaxDivergence_toggle = true;
+bool FlowOutward_toggle = true;
+
+bool move_pigment_toggle = true;
+bool sim_capillaryflow_toggle = true;
+
 bool updateHeightmap = false;
 
 struct Light {
@@ -60,15 +72,14 @@ int main()
     Window window{ "Watercolor", glm::ivec2(WIDTH, HEIGHT), OpenGLVersion::GL45 };
     Camera camera{ &window, glm::vec3(393.572052f, 290.958832f, 737.367920f), glm::vec3(0.00720430166f, 0.0117728803f, -0.999904811f) };
 
-    constexpr float fov = glm::pi<float>() / 4.0f;
-    constexpr float aspect = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
+    constexpr float fov     = glm::pi<float>() / 4.0f;
+    constexpr float aspect  = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
     const glm::mat4 mainProjectionMatrix = glm::perspective(fov, aspect, 0.1f, 1000.0f);
-    float aspectRatio = window.getAspectRatio();
+    float aspectRatio       = window.getAspectRatio();
 
-    window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
+    window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT); 
     bool mouseMenu = false;
 
-    /* Create lightsource */
     Light light = Light{ glm::vec3(800, 800, -1000), glm::vec3(1.0) };
 
     /* GENERATE HEIGHTMAP */
@@ -201,6 +212,29 @@ int main()
         ImGui::DragFloat("LightPos.x", &light.position.x, 10, 0, 1500);
         ImGui::DragFloat("LightPos.y", &light.position.y, 10, 0, 1500);
         ImGui::DragFloat("LightPos.z", &light.position.z, 10, -1500, 0);
+
+        if (ImGui::BeginCombo("Display mode", current_item)) // The second parameter is the label previewed before opening the combo.
+        {
+            for (int n = 0; n < 5; n++)
+            {
+                bool is_selected = (current_item == dropdown_items[n]); // You can store your selection however you want, outside or inside your objects
+                if (ImGui::Selectable(dropdown_items[n], is_selected)) {
+                    current_item = dropdown_items[n];
+                    updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo, current_item, &x_velocity, &y_velocity, &water_pressure);
+                }
+                if (is_selected) {
+                    ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::Checkbox("Play/Pause watercolour calculation", &calculate_watercolour);
+        ImGui::Checkbox("Enable UpdateVelocities water", &UpdateVelocities_toggle);
+        ImGui::Checkbox("Enable RelaxDivergence water", &RelaxDivergence_toggle);
+        ImGui::Checkbox("Enable FlowOutward water", &FlowOutward_toggle);
+        ImGui::Checkbox("Enable movement of pigment", &move_pigment_toggle);
+
         ImGui::Checkbox("Play/Pause watercolour calculation", &calculate_watercolour);
         //ImGui::Checkbox("Enable movement of water", &move_water_toggle);
         ImGui::Checkbox("Enable UpdateVelocities water", &UpdateVelocities_toggle);

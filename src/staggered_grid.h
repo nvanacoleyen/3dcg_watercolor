@@ -20,6 +20,7 @@ public:
 	std::vector<float> get_data_values(void);
 	int num_data_points(void);
 	float get_at_pos(float x, float y);
+	float get_from_total(int pos);
 	//float get_from_grid(int x_pos, int y_pos);
 
 	void zero_at_pos(int x, int y);
