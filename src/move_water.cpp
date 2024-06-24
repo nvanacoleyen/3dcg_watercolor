@@ -151,7 +151,7 @@ void FlowOutward(std::vector<Cell>* M, std::vector<float>* p)
 {
 	/* Constants for the function */
 	float eta = 0.05f;
-	int kernel_size = 3;
+	int kernel_size = 5;
 
 	std::vector<Cell> gaussianGrid = GaussianCellFilter(M, kernel_size);
 
@@ -174,8 +174,8 @@ std::vector<Cell> GaussianCellFilter(std::vector<Cell>* M, int gaussian_radius)
 			Cell current_cell = M->at(j * WIDTH + i);
 			float current_water_conc = 0.f;
 			int size_of_grid = 0;
-			for (int y = j - gaussian_radius / 2; y < j + gaussian_radius / 2; y++) {
-				for (int x = i - gaussian_radius / 2; x < i + gaussian_radius / 2; x++) {
+			for (int y = j - (gaussian_radius / 2); y <= j + (gaussian_radius / 2); y++) {
+				for (int x = i - (gaussian_radius / 2); x <= i + (gaussian_radius / 2); x++) {
 					int local_x = x;
 					int local_y = y;
 
