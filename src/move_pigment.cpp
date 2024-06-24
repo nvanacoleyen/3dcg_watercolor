@@ -53,7 +53,7 @@ void updateColors(std::vector<paperVertex>& vertices, std::vector<Cell>& Grid, f
 	for (size_t i = 0; i < vertices.size(); i++)
 	{
 		if (strcmp(colour_mode, "Water velocity") == 0) {
-			if (Grid[i].m_waterConc == 0) {
+			if (Grid[i].m_waterConc >= minimum_wetness) {
 				vertices[i].color = glm::vec3(0);
 			}
 			else {
@@ -67,7 +67,7 @@ void updateColors(std::vector<paperVertex>& vertices, std::vector<Cell>& Grid, f
 			
 		}
 		else if (strcmp(colour_mode, "X Water velocity") == 0) {
-			if (Grid[i].m_waterConc == 0) {
+			if (Grid[i].m_waterConc >= minimum_wetness) {
 				vertices[i].color = glm::vec3(0);
 			}
 			else {
@@ -80,7 +80,7 @@ void updateColors(std::vector<paperVertex>& vertices, std::vector<Cell>& Grid, f
 
 		}
 		else if (strcmp(colour_mode, "Y Water velocity") == 0) {
-			if (Grid[i].m_waterConc == 0) {
+			if (Grid[i].m_waterConc >= minimum_wetness) {
 				vertices[i].color = glm::vec3(0);
 			}
 			else {
@@ -93,11 +93,11 @@ void updateColors(std::vector<paperVertex>& vertices, std::vector<Cell>& Grid, f
 
 		}
 		else if (strcmp(colour_mode, "Water pressure") == 0) {
-			if (Grid[i].m_waterConc == 0) {
+			if (Grid[i].m_waterConc >= minimum_wetness) {
 				vertices[i].color = glm::vec3(0.3);
 			}
 			else {
-				float pressure_factor = (std::min(10.f, std::max(-10.f, p->at(i))) + 10) / 20;
+				float pressure_factor = (std::min(1.f, std::max(-1.f, p->at(i)))) * 10 + 0.5;
 				glm::vec3 color = glm::vec3(pressure_factor);
 
 				vertices[i].color = color;
@@ -108,7 +108,7 @@ void updateColors(std::vector<paperVertex>& vertices, std::vector<Cell>& Grid, f
 			// Color with/without water/pigment concentration
 			// For every vertex in the square:
 			glm::vec3 color;
-			if (Grid[i].m_waterConc == 1 && Grid[i].m_pigmentConc <= 0.005) {
+			if (Grid[i].m_waterConc >= minimum_wetness && Grid[i].m_pigmentConc <= 0.005) {
 				color = glm::vec3(0.8);
 			}
 			else if (Grid[i].m_pigmentConc > 0.0005) {

@@ -41,9 +41,7 @@ bool move_water_toggle = true;
 bool UpdateVelocities_toggle = true;
 bool RelaxDivergence_toggle = true;
 bool FlowOutward_toggle = true;
-
 bool move_pigment_toggle = true;
-bool sim_capillaryflow_toggle = true;
 
 const char* dropdown_items[] = {"Pigment", "Water velocity", "X Water velocity", "Y Water velocity", "Water pressure"};
 static const char* current_item = "Pigment";
@@ -226,13 +224,6 @@ int main()
         ImGui::Checkbox("Enable FlowOutward water", &FlowOutward_toggle);
         ImGui::Checkbox("Enable movement of pigment", &move_pigment_toggle);
 
-        ImGui::Checkbox("Play/Pause watercolour calculation", &calculate_watercolour);
-        //ImGui::Checkbox("Enable movement of water", &move_water_toggle);
-        ImGui::Checkbox("Enable UpdateVelocities water", &UpdateVelocities_toggle);
-        ImGui::Checkbox("Enable RelaxDivergence water", &RelaxDivergence_toggle);
-        ImGui::Checkbox("Enable FlowOutward water", &FlowOutward_toggle);
-        ImGui::Checkbox("Enable movement of pigment", &move_pigment_toggle);
-        ImGui::Checkbox("Enable simulation of capillary flow", &sim_capillaryflow_toggle);
         ImGui::End();
 
         heightRatio = papers[currentPreset].maxHeight / papers[currentPreset].oldMaxHeight;
