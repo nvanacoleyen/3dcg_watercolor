@@ -1,7 +1,7 @@
 #include "terrain.h"
 
-Terrain::Terrain(int octaves, double lucanarity, double gain, int depth, int width, double minHeight, double maxHeight)
-    : m_depth(depth), m_width(width)
+Terrain::Terrain(double octaves, double lucanarity, double gain, int depth, int width, double minHeight, double maxHeight)
+    : m_depth(depth), m_width(width), minHeight(minHeight), maxHeight(maxHeight), oldMaxHeight(maxHeight) 
 {
     m_heightMap = std::vector<std::vector<double>>(depth, std::vector<double>(width)); 
     GLuint m_vao, m_vbo, m_ibo; 
@@ -12,7 +12,7 @@ Terrain::Terrain(int octaves, double lucanarity, double gain, int depth, int wid
     calculateNormals();   
 };
 
-void Terrain::generateHeightmap(int octaves, double lucanarity, double gain, double minHeight, double maxHeight)
+void Terrain::generateHeightmap(double octaves, double lucanarity, double gain, double minHeight, double maxHeight)
 {
     SimplexNoise noise;
 
@@ -58,14 +58,15 @@ void Terrain::normalizeHeightmap(double minRange, double maxRange) {
     }
 }
 
-void Terrain::updateVertices(float heightRatio)
+void Terrain::updateVertices(float _maxHeight, float _heightRatio)
 {
     for (int y = 0; y < m_depth; y++) {
         for (int x = 0; x < m_width; x++) {
-            m_mesh.vertices[y * m_width + x].position.z = m_heightMap[y][x] * heightRatio; 
+            m_mesh.vertices[y * m_width + x].position.z = m_heightMap[y][x] * _heightRatio; 
         }
     }
     calculateNormals();
+    maxHeight = _maxHeight; 
 }
 
 void Terrain::createVertices()

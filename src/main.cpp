@@ -57,39 +57,41 @@ int main()
     window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT); 
     bool mouseMenu = false;
 
+    /* Create lightsource */
     Light light = Light{ glm::vec3(800, 800, -1000), glm::vec3(1.0) };
 
     /* GENERATE HEIGHTMAP */
-    int octaves             = 7;
-    double lucanarity       = 2.1042;
-    double gain             = 3;
+    std::vector<double> paperPresets[] = { 
+        { 7.0, 2.1, 3.0, 2.0 }, // Preset 1 (octaves, lucanarity, gain, maxHeight)
+        { 6.0, 3.0, 2.0, 5.0 }, // Preset 2
+        { 5.0, 3.5, 1.0, 5.0 }  // Preset 3 
+    };
+    int currentPreset = 0;
 
     float minHeight         = 0.f;
-    float maxHeight         = 2.f; 
-    float oldMaxHeight      = maxHeight; 
-    float maxHeightSlider   = 6 * maxHeight;
-    float heightRatio       = maxHeight / oldMaxHeight; 
-    Terrain paper(octaves, lucanarity, gain, HEIGHT, WIDTH, minHeight, maxHeight); 
-
-    // Get references to variables paper
-    paperMesh &paper_mesh   = paper.getMesh();  
-    std::vector<std::vector<double>> &heightmap = paper.getHeightmap(); 
-    GLuint &paper_vao       = paper.getVAO();
-    GLuint &paper_vbo       = paper.getVBO();
+    float maxHeightSlider   = 6 * paperPresets[0][3];
+    float heightRatio       = 1;
+    Terrain paper1(paperPresets[0][0], paperPresets[0][1], paperPresets[0][2], HEIGHT, WIDTH, minHeight, paperPresets[0][3]);
+    Terrain paper2(paperPresets[1][0], paperPresets[1][1], paperPresets[1][2], HEIGHT, WIDTH, minHeight, paperPresets[1][3]);
+    Terrain paper3(paperPresets[2][0], paperPresets[2][1], paperPresets[2][2], HEIGHT, WIDTH, minHeight, paperPresets[2][3]); 
+    std::vector<Terrain> papers{ paper1, paper2, paper3 }; 
+    //Terrain& currentPaper = papers[currentPreset];  
     
 
     /* GENERATE GRID OF CELLS */
     Staggered_Grid x_velocity(WIDTH, HEIGHT, true);
     Staggered_Grid y_velocity(WIDTH, HEIGHT, false);
     std::vector<float> water_pressure(WIDTH * HEIGHT, 0.f);
-    std::vector<Cell> Grid;
-    for (int j = 0; j < HEIGHT; j++) {
-        for (int i = 0; i < WIDTH; i++) {
-            Grid.push_back(Cell(glm::vec3(i, j, heightmap[j][i]), 1));
+    //std::vector<Cell> Grid;
+    for (auto& paper : papers) {
+        for (int j = 0; j < HEIGHT; j++) {
+            for (int i = 0; i < WIDTH; i++) {
+                paper.Grid.push_back(Cell(glm::vec3(i, j, paper.getHeightmap()[j][i]), 1));  
+            }
         }
     }
     
-    updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo);   
+    //updateColors(papers[0].getMesh().vertices, Grid, brush_radius, papers[0].getVBO()); 
 
     // Key handle function
     window.registerKeyCallback([&](int key, int /* scancode */, int action, int /* mods */) {
@@ -136,7 +138,9 @@ int main()
     const Shader paperShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/paper_vertex.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/paper_frag.glsl").build();
 
     // Create buffers for terrain
-    paper.createGLState();
+    for (auto& paper : papers) {
+        paper.createGLState();
+    }
 
     // Draw with cursor
     window.registerMouseMoveCallback([&](const glm::vec2& cursorPos) {
@@ -153,11 +157,11 @@ int main()
                         if (dist <= brush_radius) {
                             /* When using waterbrush */
                             if (waterBrush) {
-                                Grid[WIDTH * j + i].m_waterConc = 1;
+                                papers[currentPreset].Grid[WIDTH * j + i].m_waterConc = 1;
                             }
                             /* When using colorbrush */
                             else {
-                                Grid[WIDTH * j + i].m_pigmentConc = 1;
+                                papers[currentPreset].Grid[WIDTH * j + i].m_pigmentConc = 1;
                             }
                         }
                     }
@@ -172,18 +176,26 @@ int main()
         camera.updateInput();
 
         ImGui::Begin("Window");
-        ImGui::DragFloat("Max height paper", &maxHeight, 0.1f, 0.01f, maxHeightSlider, "MaxHeight: %.2f %%"); 
-        ImGui::DragFloat("LightPos.x", &light.position.x, 10, 0, 1500); 
+        ImGui::DragFloat("Max height paper", &papers[currentPreset].maxHeight, 0.1f, 0.01f, maxHeightSlider, "MaxHeight: %.2f %%");
+        ImGui::DragInt("Paper presets", &currentPreset, 0.01, 0, 2); 
+        ImGui::DragFloat("LightPos.x", &light.position.x, 10, 0, 1500);   
         ImGui::DragFloat("LightPos.y", &light.position.y, 10, 0, 1500);
-        ImGui::DragFloat("LightPos.z", &light.position.z, 10, -1500, 0);
-        ImGui::End();
+        ImGui::DragFloat("LightPos.z", &light.position.z, 10, -1500, 0); 
+        ImGui::End(); 
 
-        heightRatio = maxHeight / oldMaxHeight;
+        heightRatio = papers[currentPreset].maxHeight / papers[currentPreset].oldMaxHeight; 
 
         /* If you drag menu slider, when released it will update vertices paper */
         if (!ImGui::GetIO().WantCaptureMouse && mouseMenu == true) { 
-            paper.updateVertices(heightRatio); 
-            paper.updateBuffer();
+            /* Update vertices and buffer of current paper*/
+            papers[currentPreset].updateVertices(papers[currentPreset].maxHeight, heightRatio);
+            papers[currentPreset].updateBuffer();
+            /* Update Grid cell positions */
+            for (int j = 0; j < HEIGHT; j++) {
+                for (int i = 0; i < WIDTH; i++) {
+                    papers[currentPreset].Grid[j * WIDTH + i].m_position.z = papers[currentPreset].getHeightmap()[j][i];
+                }
+            }
         }
         /* If mouse uses menu, mouseMenu == true, else == false */
         if (ImGui::GetIO().WantCaptureMouse) { mouseMenu = true; }
@@ -195,25 +207,24 @@ int main()
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // Enable color writes. 
 
         /* You toggle these by pressing enter. */
-        if (calculate_watercolour) {
+        if (calculate_watercolour) { 
             /* Move water functions. */
-            UpdateVelocities(&Grid, &x_velocity, &y_velocity, &water_pressure);
+            UpdateVelocities(&papers[currentPreset].Grid, &x_velocity, &y_velocity, &water_pressure);
             RelaxDivergence(&x_velocity, &y_velocity, &water_pressure);
-            FlowOutward(&Grid, &water_pressure);
+            FlowOutward(&papers[currentPreset].Grid, &water_pressure);
         
             /* Pigment functions */
-            movePigment(&Grid, &x_velocity, &y_velocity);
-            updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo);  
+            movePigment(&papers[currentPreset].Grid, &x_velocity, &y_velocity);
+            updateColors(papers[currentPreset].getMesh().vertices, papers[currentPreset].Grid, brush_radius, papers[currentPreset].getVBO());
         }
         /* Brush function */
         else if (isDragging) {
             glm::vec2 cursorPosition = window.getCursorPos() / window.getDpiScalingFactor();
-            updateColors(paper_mesh.vertices, Grid, brush_radius, paper_vbo);  
-            
+            updateColors(papers[currentPreset].getMesh().vertices, papers[currentPreset].Grid, brush_radius, papers[currentPreset].getVBO());
         }
 
         // Update the buffer data 
-        paper.updateBuffer(); 
+        papers[currentPreset].updateBuffer();
          
         const glm::mat4 mvp = mainProjectionMatrix * camera.viewMatrix();
 
@@ -223,7 +234,7 @@ int main()
             glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(mvp));
             glUniform3fv(1, 1, glm::value_ptr(light.position));
             glUniform3fv(2, 1, glm::value_ptr(light.color)); 
-            paper.Render(); 
+            papers[currentPreset].Render();
         }
 
         glfwPollEvents();
@@ -232,8 +243,10 @@ int main()
         window.swapBuffers();
     }
     // Clean up
-    glDeleteVertexArrays(1, &paper_vao); 
-    glDeleteBuffers(1, &paper_vbo);  
+    for (auto& paper : papers) {
+        glDeleteVertexArrays(1, &paper.getVAO());
+        glDeleteBuffers(1, &paper.getVBO());
+    }
 
     return 0;
 }

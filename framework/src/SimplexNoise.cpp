@@ -128,7 +128,7 @@ double SimplexNoise::calculateCornerValue(const double &x, const double &y, cons
 }
 
 void SimplexNoise::randomizeSeed() {
-    unsigned int seed = static_cast<long unsigned int>(time(nullptr));
+    unsigned int seed = static_cast<long unsigned int>(5);
     setSeed(seed);
 }
 

@@ -4,9 +4,10 @@
 #include <vector>
 #include <iostream>
 #include <framework/mesh.h>
+#include "../cell.h"   
 #include <framework/window.h>
 #include <framework/SimplexNoise.h>
-#include <framework/disable_all_warnings.h>
+#include <framework/disable_all_warnings.h> 
  
 struct paperVertex {  
 	glm::vec3 position;
@@ -43,14 +44,14 @@ struct paperMesh {
 class Terrain
 {
 public:
-	Terrain(int octaves, double lucanarity, double gain, int depth, int width, double minHeight, double maxHeight);
+	Terrain(double octaves, double lucanarity, double gain, int depth, int width, double minHeight, double maxHeight);
 
-	void generateHeightmap(int octaves, double lucanarity, double gain, double minHeight, double maxHeight);
+	void generateHeightmap(double octaves, double lucanarity, double gain, double minHeight, double maxHeight); 
 	void normalizeHeightmap(double minHeight, double maxHeight); 
 
 	void createVertices();  
 	void createTriangles();
-	void updateVertices(float heightRatio);
+	void updateVertices(float maxHeight, float heightRatio); 
 
 	void calculateNormals();  
 
@@ -58,11 +59,16 @@ public:
 	void updateBuffer();
 	void Render(); 
 
-	paperMesh &getMesh();  
-	std::vector<std::vector<double>> &getHeightmap();
-	GLuint &getVAO(); 
-	GLuint &getVBO();
-	GLuint &getIBO();
+	paperMesh& getMesh();  
+	std::vector<std::vector<double>>& getHeightmap();
+	GLuint& getVAO(); 
+	GLuint& getVBO();
+	GLuint& getIBO();
+
+	float minHeight = 0;
+	float maxHeight = 0;
+	float oldMaxHeight = 0;  
+	std::vector<Cell> Grid;
 
 private:
 	std::vector<std::vector<double>> m_heightMap;  
@@ -70,8 +76,6 @@ private:
 
 	int m_width = 0;
 	int m_depth = 0;
-	double m_min = 0;
-	double m_max = 0;
 
 	GLuint m_vao;
 	GLuint m_vbo;
