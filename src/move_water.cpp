@@ -125,8 +125,8 @@ void RelaxDivergence(Staggered_Grid* u, Staggered_Grid* v, std::vector<float>* p
 		/* It is very important to remember that u has width + 1, and v has height + 1. When setting the new values for all this we must keep that in mind, along with that when we have position i+0.5 for u, this is ceil + 1*/
 		delta_max = 0;
 
-		for (int j = 0; j < HEIGHT - 1; j++) {
-			for (int i = 0; i < WIDTH - 1; i++) {
+		for (int j = 0; j < HEIGHT; j++) {
+			for (int i = 0; i < WIDTH; i++) {
 				float delta = some_multiplier_idk_man * (u->get_at_pos(i + 0.5f, j) - u->get_at_pos(i - 0.5f, j) + v->get_at_pos(i, j + 0.5f) - v->get_at_pos(i, j - 0.5f));
 				p->at(j * WIDTH + i) += delta;
 				new_u.at(j * (WIDTH + 1) + i + 1) += delta;  /* u[i + 0.5, j] */
