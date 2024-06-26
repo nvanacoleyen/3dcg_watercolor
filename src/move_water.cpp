@@ -127,7 +127,17 @@ void RelaxDivergence(Staggered_Grid* u, Staggered_Grid* v, std::vector<float>* p
 
 		for (int j = 0; j < HEIGHT; j++) {
 			for (int i = 0; i < WIDTH; i++) {
-				float delta = some_multiplier_idk_man * (u->get_at_pos(i + 0.5f, j) - u->get_at_pos(i - 0.5f, j) + v->get_at_pos(i, j + 0.5f) - v->get_at_pos(i, j - 0.5f));
+				float diff_x = u->get_at_pos(i + 0.5f, j) - u->get_at_pos(i - 0.5f, j);
+				if (u->get_at_pos(i + 0.5f, j) == 0.f || u->get_at_pos(i - 0.5f, j) == 0.f) {
+					diff_x = 0;
+				}
+
+				float diff_y = v->get_at_pos(i, j + 0.5f) - v->get_at_pos(i, j - 0.5f);
+				if (v->get_at_pos(i, j + 0.5f) == 0.f || v->get_at_pos(i, j - 0.5f) == 0.f) {
+					diff_y = 0;
+				}
+
+				float delta = some_multiplier_idk_man * (diff_x + diff_y);
 				p->at(j * WIDTH + i) += delta;
 				new_u.at(j * (WIDTH + 1) + i + 1) += delta;  /* u[i + 0.5, j] */
 				new_u.at(j * (WIDTH + 1) + i)     -= delta;  /* u[i - 0.5, j] */
@@ -150,7 +160,7 @@ void RelaxDivergence(Staggered_Grid* u, Staggered_Grid* v, std::vector<float>* p
 void FlowOutward(std::vector<Cell>* M, std::vector<float>* p)
 {
 	/* Constants for the function */
-	float eta = 0.05f;
+	float eta = 0.01f;
 	int kernel_size = 5;
 
 	std::vector<Cell> gaussianGrid = GaussianCellFilter(M, kernel_size);
