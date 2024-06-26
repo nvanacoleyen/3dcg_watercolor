@@ -16,24 +16,17 @@ void movePigment(std::vector<Cell>* Grid, Staggered_Grid* u, Staggered_Grid* v)
 		/* Loop through all cells and adjust pigments */
 		for (int j = 1; j < HEIGHT - 1; j++) {
 			for (int i = 1; i < WIDTH - 1; i++) {
-				if (current_Grid[WIDTH * j + i].m_pigmentConc > 0 && u->get_at_pos(i + 0.5, j) > 0) {
-					float bruh1 = u->get_at_pos(i + 0.5, j);
-					float bruh2 = -u->get_at_pos(i - 0.5, j);
-					float bruh3 = v->get_at_pos(i, j + 0.5);
-					float bruh4 = -v->get_at_pos(i, j - 0.5);
-				}
+				new_Grid[WIDTH * (j + 1) + (i + 1) + 1].m_pigmentConc += delta_t * std::max(0.f, (u->get_at_pos(i + 0.5, j) * current_Grid[WIDTH * (j + 1) + i + 1].m_pigmentConc));
+				new_Grid[WIDTH * (j + 1) + (i - 1) + 1].m_pigmentConc += delta_t * std::max(0.f, (-u->get_at_pos(i - 0.5, j) * current_Grid[WIDTH * (j + 1) + i + 1].m_pigmentConc));
+				new_Grid[WIDTH * (j + 2) + i + 1].m_pigmentConc += delta_t * std::max(0.f, (v->get_at_pos(i, j + 0.5) * current_Grid[WIDTH * (j + 1) + i + 1].m_pigmentConc));
+				new_Grid[WIDTH * (j) + i + 1].m_pigmentConc += delta_t * std::max(0.f, (-v->get_at_pos(i, j - 0.5) * current_Grid[WIDTH * (j + 1) + i + 1].m_pigmentConc));
 
-				new_Grid[WIDTH * j + (i + 1)].m_pigmentConc += delta_t * std::max(0.f, (u->get_at_pos(i + 0.5, j) * current_Grid[WIDTH * j + i].m_pigmentConc));
-				new_Grid[WIDTH * j + (i - 1)].m_pigmentConc += delta_t * std::max(0.f, (-u->get_at_pos(i - 0.5, j) * current_Grid[WIDTH * j + i].m_pigmentConc));
-				new_Grid[WIDTH * (j + 1) + i].m_pigmentConc += delta_t * std::max(0.f, (v->get_at_pos(i, j + 0.5) * current_Grid[WIDTH * j + i].m_pigmentConc));
-				new_Grid[WIDTH * (j - 1) + i].m_pigmentConc += delta_t * std::max(0.f, (-v->get_at_pos(i, j - 0.5) * current_Grid[WIDTH * j + i].m_pigmentConc));
+				new_Grid[WIDTH * (j + 1) + i + 1].m_pigmentConc -= delta_t * (std::max(0.f, (u->get_at_pos(i + 0.5, j) * current_Grid[WIDTH * (j + 1) + i + 1].m_pigmentConc)) +
+					std::max(0.f, (-u->get_at_pos(i - 0.5, j) * current_Grid[WIDTH * (j + 1) + i + 1].m_pigmentConc)) +
+					std::max(0.f, (v->get_at_pos(i, j + 0.5) * current_Grid[WIDTH * (j + 1) + i + 1].m_pigmentConc)) +
+					std::max(0.f, (-v->get_at_pos(i, j - 0.5) * current_Grid[WIDTH * (j + 1) + i + 1].m_pigmentConc)));
 
-				new_Grid[WIDTH * j + i].m_pigmentConc -= delta_t * (std::max(0.f, (u->get_at_pos(i + 0.5, j) * current_Grid[WIDTH * j + i].m_pigmentConc)) +
-					std::max(0.f, (-u->get_at_pos(i - 0.5, j) * current_Grid[WIDTH * j + i].m_pigmentConc)) +
-					std::max(0.f, (v->get_at_pos(i, j + 0.5) * current_Grid[WIDTH * j + i].m_pigmentConc)) +
-					std::max(0.f, (-v->get_at_pos(i, j - 0.5) * current_Grid[WIDTH * j + i].m_pigmentConc)));
-
-				new_Grid[WIDTH * j + i].m_pigmentConc = std::max(0.f, new_Grid[WIDTH * j + i].m_pigmentConc);
+				new_Grid[WIDTH * (j + 1) + i + 1].m_pigmentConc = std::max(0.f, new_Grid[WIDTH * (j + 1) + i + 1].m_pigmentConc);
 
 			}
 		}
